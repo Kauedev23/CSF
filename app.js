@@ -1,123 +1,805 @@
-// app.js
+// ===============================
+// Configuração do Supabase
+// ===============================
+const SUPABASE_URL = 'https://vaiakixfumwglgyveerh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhaWFraXhmdW13Z2xneXZlZXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzOTc3NDMsImV4cCI6MjA2Njk3Mzc0M30.ZnvUmL1GtQ2A7jtgjX9l9Y6eSD8ifdIAPs2GxhBBdiI';
+const supabase = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-// Supabase configuration
-const { createClient } = supabase;
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// ===============================
+// Controle de Containers SPA
+// ===============================
+const loginContainer = document.getElementById('login-container');
+const mainContainer = document.getElementById('main-container');
+const userRoleSpan = document.getElementById('user-role');
 
-// DOM Elements
+function showLogin() {
+  loginContainer.classList.remove('hidden');
+  mainContainer.classList.add('hidden');
+}
+
+function showMain(role) {
+  loginContainer.classList.add('hidden');
+  mainContainer.classList.remove('hidden');
+  userRoleSpan.textContent = role === 'admin' ? 'Administrador' : 'Operacional';
+  ajustarMenuPorPerfil(role);
+  showSection('dashboard');
+  loadDashboard();
+}
+
+// ===============================
+// Autenticação
+// ===============================
 const loginForm = document.getElementById('login-form');
-const logoutButton = document.getElementById('logout-button');
-const dashboard = document.getElementById('dashboard');
-const inventoryTable = document.getElementById('inventory-table');
-const addItemForm = document.getElementById('add-item-form');
-const consumeItemForm = document.getElementById('consume-item-form');
-const reportButton = document.getElementById('report-button');
+const logoutBtn = document.getElementById('logout-btn');
 
-// Event Listeners
-loginForm.addEventListener('submit', handleLogin);
-logoutButton.addEventListener('click', handleLogout);
-addItemForm.addEventListener('submit', handleAddItem);
-consumeItemForm.addEventListener('submit', handleConsumeItem);
-reportButton.addEventListener('click', generateReport);
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    showToast('Erro ao fazer login: ' + error.message, 'error');
+    return;
+  }
+  // Após login, checar perfil e exibir main
+  checkSession();
+});
 
-// Authentication Functions
-async function handleLogin(event) {
-    event.preventDefault();
-    const email = event.target.email.value;
-    const password = event.target.password.value;
+logoutBtn.addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  showLogin();
+});
 
-    const { user, error } = await supabase.auth.signIn({ email, password });
-    if (error) {
-        alert('Erro ao fazer login: ' + error.message);
-    } else {
-        loadDashboard();
-    }
+// ===============================
+// Checagem de Sessão e Perfil
+// ===============================
+async function checkSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    showLogin();
+    return;
+  }
+  // Buscar perfil do usuário
+  const { data: { user } } = await supabase.auth.getUser();
+  let role = 'operacional';
+  // Exemplo: buscar role em tabela 'profiles' (ajuste conforme seu schema)
+  const { data: perfil } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  if (perfil && perfil.role) role = perfil.role;
+  showMain(role);
+  // Carregar dados iniciais do sistema
+  // loadDashboard();
+  // loadEstoque();
+  // loadHistorico();
 }
 
-async function handleLogout() {
-    await supabase.auth.signOut();
-    location.reload();
-}
+// ===============================
+// Inicialização
+// ===============================
+window.addEventListener('DOMContentLoaded', () => {
+  checkSession();
+});
 
-// Dashboard Functions
+// ===============================
+// Placeholders para funções principais
+// ===============================
+// function loadDashboard() {}
+// function loadEstoque() {}
+// function loadHistorico() {}
+// function exportarExcel() {}
+// function adicionarItem() {}
+// function editarItem() {}
+// function consumirItem() {}
+// ...
+
+// ===============================
+// Função para carregar o Dashboard
+// ===============================
 async function loadDashboard() {
-    const { data, error } = await supabase.from('estoque').select('*');
-    if (error) {
-        console.error('Erro ao carregar o dashboard:', error);
-        return;
-    }
-    displayDashboardStats(data);
+  // Buscar todos os itens
+  const { data: itens, error } = await supabase.from('itens').select('*');
+  if (error) {
+    showToast('Erro ao carregar itens: ' + error.message, 'error');
+    return;
+  }
+  // Estatísticas
+  const totalItens = itens.length;
+  const baixo = itens.filter(item => item.quantidade > 0 && item.quantidade <= item.quantidade_minima).length;
+  const critico = itens.filter(item => item.quantidade === 0).length;
+
+  // Consumo mensal (somar saídas do mês atual)
+  const inicioMes = new Date();
+  inicioMes.setDate(1);
+  inicioMes.setHours(0,0,0,0);
+  const { data: historico, error: histError } = await supabase
+    .from('historico')
+    .select('*')
+    .eq('tipo', 'saida')
+    .gte('data', inicioMes.toISOString());
+  let consumoMensal = 0;
+  if (!histError && historico) {
+    consumoMensal = historico.reduce((soma, h) => soma + h.quantidade, 0);
+  }
+
+  // Atualizar cards
+  document.getElementById('stat-total-itens').textContent = totalItens;
+  document.getElementById('stat-baixo').textContent = baixo;
+  document.getElementById('stat-critico').textContent = critico;
+  document.getElementById('stat-consumo-mensal').textContent = consumoMensal;
+
+  // Gráfico de barras: itens mais consumidos
+  let dadosBar = {};
+  if (!histError && historico) {
+    historico.forEach(h => {
+      if (!dadosBar[h.item_id]) dadosBar[h.item_id] = 0;
+      dadosBar[h.item_id] += h.quantidade;
+    });
+  }
+  // Buscar nomes dos itens consumidos
+  const idsConsumidos = Object.keys(dadosBar);
+  let nomesItens = {};
+  if (idsConsumidos.length > 0) {
+    const { data: itensConsumidos } = await supabase
+      .from('itens')
+      .select('id, nome')
+      .in('id', idsConsumidos);
+    itensConsumidos.forEach(i => { nomesItens[i.id] = i.nome; });
+  }
+  const labelsBar = Object.keys(dadosBar).map(id => nomesItens[id] || id);
+  const dataBar = Object.values(dadosBar);
+
+  // Gráfico de pizza: status do estoque
+  const normal = itens.filter(item => item.quantidade > item.quantidade_minima).length;
+  const dataPie = [normal, baixo, critico];
+  const labelsPie = ['Normal', 'Baixo', 'Crítico'];
+  const colorsPie = ['#10b981', '#f59e42', '#ef4444'];
+
+  // Renderizar gráficos
+  renderBarChart(labelsBar, dataBar);
+  renderPieChart(labelsPie, dataPie, colorsPie);
 }
 
-// Inventory Management Functions
-async function handleAddItem(event) {
-    event.preventDefault();
-    const itemData = {
-        nome: event.target.nome.value,
-        quantidade: event.target.quantidade.value,
-        quantidade_minima: event.target.quantidade_minima.value,
-        unidade: event.target.unidade.value,
-        fornecedor: event.target.fornecedor.value,
-    };
-
-    const { error } = await supabase.from('estoque').insert([itemData]);
-    if (error) {
-        alert('Erro ao adicionar item: ' + error.message);
-    } else {
-        loadInventory();
+// Função para renderizar gráfico de barras
+function renderBarChart(labels, data) {
+  const ctx = document.getElementById('chart-bar').getContext('2d');
+  if (window.barChart) window.barChart.destroy();
+  window.barChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Mais Consumidos',
+        data,
+        backgroundColor: '#2563eb',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } }
     }
+  });
 }
 
-async function handleConsumeItem(event) {
-    event.preventDefault();
-    const itemId = event.target.item_id.value;
-    const quantidade = event.target.quantidade.value;
+// Função para renderizar gráfico de pizza
+function renderPieChart(labels, data, colors) {
+  const ctx = document.getElementById('chart-pie').getContext('2d');
+  if (window.pieChart) window.pieChart.destroy();
+  window.pieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+}
 
+// ===============================
+// Função para carregar e exibir o Estoque
+// ===============================
+async function loadEstoque() {
+  // Buscar filtros
+  const filtroNome = document.getElementById('filtro-nome').value.toLowerCase();
+  const filtroStatus = document.getElementById('filtro-status').value;
+  const filtroFornecedor = document.getElementById('filtro-fornecedor').value.toLowerCase();
+
+  // Buscar itens
+  const { data: itens, error } = await supabase.from('itens').select('*');
+  if (error) {
+    showToast('Erro ao carregar itens: ' + error.message, 'error');
+    return;
+  }
+
+  // Filtrar itens
+  let itensFiltrados = itens.filter(item => {
+    let match = true;
+    if (filtroNome && !item.nome.toLowerCase().includes(filtroNome)) match = false;
+    if (filtroFornecedor && !item.fornecedor.toLowerCase().includes(filtroFornecedor)) match = false;
+    // Status visual
+    let status = 'normal';
+    if (item.quantidade === 0) status = 'critico';
+    else if (item.quantidade <= item.quantidade_minima) status = 'baixo';
+    if (filtroStatus && filtroStatus !== status) match = false;
+    return match;
+  });
+
+  renderEstoqueTabela(itensFiltrados);
+  renderEstoqueCards(itensFiltrados);
+}
+
+// Renderizar tabela (desktop)
+function renderEstoqueTabela(itens) {
+  const container = document.getElementById('estoque-tabela');
+  if (!container) return;
+  if (itens.length === 0) {
+    container.innerHTML = '<div class="p-4 text-center text-gray-500">Nenhum item encontrado.</div>';
+    return;
+  }
+  let html = `<table class="min-w-full bg-white rounded shadow text-center">
+    <thead><tr>
+      <th class="px-4 py-2 text-left">Nome</th>
+      <th class="px-4 py-2 text-center">Quantidade</th>
+      <th class="px-4 py-2 text-center">Mínima</th>
+      <th class="px-4 py-2 text-center">Unidade</th>
+      <th class="px-4 py-2 text-left">Fornecedor</th>
+      <th class="px-4 py-2 text-center">Status</th>
+      <th class="px-4 py-2 text-center">Ações</th>
+    </tr></thead><tbody>`;
+  itens.forEach(item => {
+    let status = 'normal';
+    let statusIcon = '<svg class="w-4 h-4">';
+    if (item.quantidade === 0) { status = 'critico'; statusIcon += '<use href="#heroicon-o-x-circle" /></svg>'; }
+    else if (item.quantidade <= item.quantidade_minima) { status = 'baixo'; statusIcon += '<use href="#heroicon-o-exclamation-triangle" /></svg>'; }
+    else { statusIcon += '<use href="#heroicon-o-check-circle" /></svg>'; }
+    html += `<tr>
+      <td class="px-4 py-2 text-left">${item.nome}</td>
+      <td class="px-4 py-2 text-center">${item.quantidade}</td>
+      <td class="px-4 py-2 text-center">${item.quantidade_minima}</td>
+      <td class="px-4 py-2 text-center">${item.unidade}</td>
+      <td class="px-4 py-2 text-left">${item.fornecedor}</td>
+      <td class="px-4 py-2 text-center status-${status}">${statusIcon}${status.charAt(0).toUpperCase() + status.slice(1)}</td>
+      <td class="px-4 py-2 text-center">
+        <button class="text-green-600 hover:underline mr-2" onclick="abrirFormConsumir(${item.id})">Consumir</button>
+        <button class="text-blue-600 hover:underline mr-2" onclick="editarItem(${item.id})">Editar</button>
+        <button class="text-red-600 hover:underline" onclick="excluirItem(${item.id})">Excluir</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// Renderizar cards (mobile)
+function renderEstoqueCards(itens) {
+  const container = document.getElementById('estoque-cards');
+  if (!container) return;
+  if (itens.length === 0) {
+    container.innerHTML = '<div class="p-4 text-center text-gray-500">Nenhum item encontrado.</div>';
+    return;
+  }
+  let html = '';
+  itens.forEach(item => {
+    let status = 'normal';
+    let statusIcon = '<svg class="w-4 h-4">';
+    if (item.quantidade === 0) { status = 'critico'; statusIcon += '<use href="#heroicon-o-x-circle" /></svg>'; }
+    else if (item.quantidade <= item.quantidade_minima) { status = 'baixo'; statusIcon += '<use href="#heroicon-o-exclamation-triangle" /></svg>'; }
+    else { statusIcon += '<use href="#heroicon-o-check-circle" /></svg>'; }
+    html += `<div class="bg-white rounded shadow p-4 mb-4">
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-bold text-lg">${item.nome}</span>
+        <span class="status-${status}">${statusIcon}${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+      </div>
+      <div class="mb-1">Quantidade: <b>${item.quantidade}</b> (${item.unidade})</div>
+      <div class="mb-1">Mínima: <b>${item.quantidade_minima}</b></div>
+      <div class="mb-1">Fornecedor: <b>${item.fornecedor}</b></div>
+      <div class="flex gap-2 mt-2">
+        <button class="text-green-600 hover:underline" onclick="abrirFormConsumir(${item.id})">Consumir</button>
+        <button class="text-blue-600 hover:underline" onclick="editarItem(${item.id})">Editar</button>
+        <button class="text-red-600 hover:underline" onclick="excluirItem(${item.id})">Excluir</button>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+// Eventos dos filtros
+['filtro-nome', 'filtro-status', 'filtro-fornecedor'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', loadEstoque);
+});
+
+// Chamar loadEstoque ao exibir a tela de estoque
+const estoqueSection = document.getElementById('estoque');
+if (estoqueSection) {
+  estoqueSection.addEventListener('show', loadEstoque);
+}
+
+// ===============================
+// Adicionar/Editar Item - Abrir formulário
+// ===============================
+const addItemBtn = document.getElementById('add-item-btn');
+const formItemSection = document.getElementById('form-item-section');
+const formItem = document.getElementById('form-item');
+const formItemTitle = document.getElementById('form-item-title');
+const cancelarItemBtn = document.getElementById('cancelar-item-btn');
+
+let editandoItemId = null;
+
+if (addItemBtn) {
+  addItemBtn.addEventListener('click', () => abrirFormItem());
+}
+
+function abrirFormItem(item = null) {
+  formItemSection.classList.remove('hidden');
+  document.getElementById('estoque').classList.add('hidden');
+  if (item) {
+    formItemTitle.textContent = 'Editar Item';
+    formItem['item-id'].value = item.id;
+    formItem['item-nome'].value = item.nome;
+    formItem['item-quantidade'].value = item.quantidade;
+    formItem['item-minima'].value = item.quantidade_minima;
+    formItem['item-unidade'].value = item.unidade;
+    formItem['item-fornecedor'].value = item.fornecedor;
+    editandoItemId = item.id;
+  } else {
+    formItemTitle.textContent = 'Adicionar Item';
+    formItem.reset();
+    editandoItemId = null;
+  }
+}
+
+if (cancelarItemBtn) {
+  cancelarItemBtn.addEventListener('click', () => {
+    formItemSection.classList.add('hidden');
+    document.getElementById('estoque').classList.remove('hidden');
+  });
+}
+
+// ===============================
+// Submissão do formulário de item
+// ===============================
+formItem.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  // Validação
+  const nome = formItem['item-nome'].value.trim();
+  const quantidade = parseInt(formItem['item-quantidade'].value, 10);
+  const minima = parseInt(formItem['item-minima'].value, 10);
+  const unidade = formItem['item-unidade'].value.trim();
+  const fornecedor = formItem['item-fornecedor'].value.trim();
+  if (!nome || isNaN(quantidade) || isNaN(minima) || !unidade || !fornecedor) {
+    showToast('Preencha todos os campos corretamente.', 'error');
+    return;
+  }
+  if (quantidade < 0 || minima < 0) {
+    showToast('Quantidade e mínima devem ser maiores ou iguais a zero.', 'error');
+    return;
+  }
+  // Inserir ou atualizar
+  if (editandoItemId) {
+    // Atualizar item
+    const { error } = await supabase
+      .from('itens')
+      .update({ nome, quantidade, quantidade_minima: minima, unidade, fornecedor })
+      .eq('id', editandoItemId);
+    if (error) {
+      showToast('Erro ao atualizar item: ' + error.message, 'error');
+      return;
+    }
+    showToast('Item atualizado com sucesso!', 'success');
+  } else {
+    // Adicionar item
     const { data, error } = await supabase
-        .from('estoque')
-        .select('quantidade')
-        .eq('id', itemId)
-        .single();
-
-    if (data.quantidade < quantidade) {
-        alert('Quantidade insuficiente!');
-        return;
+      .from('itens')
+      .insert([{ nome, quantidade, quantidade_minima: minima, unidade, fornecedor }])
+      .select();
+    if (error) {
+      showToast('Erro ao adicionar item: ' + error.message, 'error');
+      return;
     }
-
-    const { error: consumeError } = await supabase
-        .from('estoque')
-        .update({ quantidade: data.quantidade - quantidade })
-        .eq('id', itemId);
-
-    if (consumeError) {
-        alert('Erro ao consumir item: ' + consumeError.message);
-    } else {
-        loadInventory();
+    // Registrar entrada no histórico
+    if (data && data[0]) {
+      const user = await supabase.auth.getUser();
+      await supabase.from('historico').insert([{
+        tipo: 'entrada',
+        item_id: data[0].id,
+        quantidade,
+        usuario_id: user.data.user.id,
+        fornecedor,
+        unidade
+      }]);
     }
-}
+    showToast('Item adicionado com sucesso!', 'success');
+  }
+  formItemSection.classList.add('hidden');
+  document.getElementById('estoque').classList.remove('hidden');
+  loadEstoque();
+});
 
-// Report Generation
-function generateReport() {
-    // Logic to generate and export report using SheetJS
-}
+// ===============================
+// Funções globais para editar/excluir
+// ===============================
+window.editarItem = async function(id) {
+  // Buscar item e abrir formulário preenchido
+  const { data, error } = await supabase.from('itens').select('*').eq('id', id).single();
+  if (error) {
+    showToast('Erro ao buscar item: ' + error.message, 'error');
+    return;
+  }
+  abrirFormItem(data);
+};
 
-// Utility Functions
-function displayDashboardStats(data) {
-    // Logic to display statistics and charts using Chart.js
-}
-
-function loadInventory() {
-    // Logic to load and display inventory items
-}
-
-// Initialize application
-async function init() {
-    const { data: user } = await supabase.auth.getUser();
-    if (user) {
-        loadDashboard();
+window.excluirItem = async function(id) {
+  if (confirm('Tem certeza que deseja excluir este item?')) {
+    const { error } = await supabase.from('itens').delete().eq('id', id);
+    if (error) {
+      showToast('Erro ao excluir item: ' + error.message, 'error');
+      return;
     }
+    // Registrar exclusão no histórico
+    const user = await supabase.auth.getUser();
+    await supabase.from('historico').insert([{
+      tipo: 'exclusao',
+      item_id: id,
+      quantidade: 0,
+      usuario_id: user.data.user.id
+    }]);
+    showToast('Item excluído com sucesso!', 'success');
+    loadEstoque();
+  }
+};
+
+// ===============================
+// Consumir Item - Abrir formulário (agora com select de itens)
+// ===============================
+const formConsumirSection = document.getElementById('form-consumir-section');
+const formConsumir = document.getElementById('form-consumir');
+const cancelarConsumirBtn = document.getElementById('cancelar-consumir-btn');
+const consumirItemSelect = document.getElementById('consumir-item-select');
+const consumirQuantidadeInput = document.getElementById('consumir-quantidade');
+
+// Popular select de itens ao abrir o formulário
+async function abrirFormConsumir() {
+  consumirItemSelect.innerHTML = '<option value="">Carregando...</option>';
+  consumirQuantidadeInput.value = '';
+  consumirQuantidadeInput.max = '';
+  // Buscar itens disponíveis
+  const { data: itens, error } = await supabase.from('itens').select('*').order('nome');
+  if (error) {
+    showToast('Erro ao carregar itens: ' + error.message, 'error');
+    return;
+  }
+  if (!itens || itens.length === 0) {
+    consumirItemSelect.innerHTML = '<option value="">Nenhum item disponível</option>';
+    return;
+  }
+  consumirItemSelect.innerHTML = '<option value="">Selecione um item</option>' +
+    itens.map(item => `<option value="${item.id}" data-qtd="${item.quantidade}">${item.nome} (${item.quantidade} ${item.unidade})</option>`).join('');
+  formConsumirSection.classList.remove('hidden');
+  document.getElementById('estoque').classList.add('hidden');
 }
 
-init();
+// Atualizar max do campo quantidade ao selecionar item
+consumirItemSelect.addEventListener('change', function() {
+  const selected = consumirItemSelect.options[consumirItemSelect.selectedIndex];
+  const qtd = selected.getAttribute('data-qtd');
+  consumirQuantidadeInput.max = qtd || '';
+});
+
+if (cancelarConsumirBtn) {
+  cancelarConsumirBtn.addEventListener('click', () => {
+    formConsumirSection.classList.add('hidden');
+    document.getElementById('estoque').classList.remove('hidden');
+  });
+}
+
+// Submissão do formulário de consumo
+formConsumir.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = consumirItemSelect.value;
+  const quantidade = parseInt(consumirQuantidadeInput.value, 10);
+  if (!id || isNaN(quantidade) || quantidade <= 0) {
+    showToast('Selecione um item e informe uma quantidade válida.', 'error');
+    return;
+  }
+  // Buscar item atual
+  const { data: item, error } = await supabase.from('itens').select('*').eq('id', id).single();
+  if (error) {
+    showToast('Erro ao buscar item: ' + error.message, 'error');
+    return;
+  }
+  if (quantidade > item.quantidade) {
+    showToast('Não é possível consumir mais do que disponível.', 'error');
+    return;
+  }
+  // Atualizar estoque
+  const { error: updateError } = await supabase
+    .from('itens')
+    .update({ quantidade: item.quantidade - quantidade })
+    .eq('id', id);
+  if (updateError) {
+    showToast('Erro ao atualizar estoque: ' + updateError.message, 'error');
+    return;
+  }
+  // Registrar saída no histórico
+  const user = await supabase.auth.getUser();
+  await supabase.from('historico').insert([{
+    tipo: 'saida',
+    item_id: id,
+    quantidade,
+    usuario_id: user.data.user.id,
+    fornecedor: item.fornecedor,
+    unidade: item.unidade
+  }]);
+  showToast('Consumo registrado com sucesso!', 'success');
+  formConsumirSection.classList.add('hidden');
+  // Redirecionar para dashboard se perfil for operacional
+  const role = userRoleSpan.textContent.toLowerCase();
+  if (role === 'operacional') {
+    showSection('dashboard');
+  } else {
+    document.getElementById('estoque').classList.remove('hidden');
+    loadEstoque();
+  }
+});
+
+// ===============================
+// Relatório de Estoque Baixo
+// ===============================
+async function loadRelatorioBaixo() {
+  const { data: itens, error } = await supabase.from('itens').select('*');
+  if (error) {
+    showToast('Erro ao carregar itens: ' + error.message, 'error');
+    return;
+  }
+  // Filtrar itens abaixo do mínimo
+  const itensBaixo = itens.filter(item => item.quantidade <= item.quantidade_minima);
+  // Calcular sugestão de compra
+  const relatorio = itensBaixo.map(item => ({
+    nome: item.nome,
+    quantidade_atual: item.quantidade,
+    quantidade_minima: item.quantidade_minima,
+    unidade: item.unidade,
+    fornecedor: item.fornecedor,
+    sugestao_compra: Math.max(item.quantidade_minima - item.quantidade, 0)
+  }));
+  renderRelatorioTabela(relatorio);
+}
+
+function renderRelatorioTabela(relatorio) {
+  const container = document.getElementById('relatorio-tabela');
+  if (!container) return;
+  if (relatorio.length === 0) {
+    container.innerHTML = '<div class="p-4 text-center text-gray-500">Nenhum item abaixo do mínimo.</div>';
+    return;
+  }
+  let html = `<table class="min-w-full bg-white rounded shadow text-center">
+    <thead><tr>
+      <th class="px-4 py-2 text-left">Nome</th>
+      <th class="px-4 py-2 text-center">Qtd. Atual</th>
+      <th class="px-4 py-2 text-center">Qtd. Mínima</th>
+      <th class="px-4 py-2 text-center">Unidade</th>
+      <th class="px-4 py-2 text-left">Fornecedor</th>
+      <th class="px-4 py-2 text-center">Sugestão de Compra</th>
+    </tr></thead><tbody>`;
+  relatorio.forEach(item => {
+    html += `<tr>
+      <td class="px-4 py-2 text-left">${item.nome}</td>
+      <td class="px-4 py-2 text-center">${item.quantidade_atual}</td>
+      <td class="px-4 py-2 text-center">${item.quantidade_minima}</td>
+      <td class="px-4 py-2 text-center">${item.unidade}</td>
+      <td class="px-4 py-2 text-left">${item.fornecedor}</td>
+      <td class="px-4 py-2 text-center font-bold text-green-700">${item.sugestao_compra}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// Exportar relatório para Excel
+const exportarExcelBtn = document.getElementById('exportar-excel-btn');
+if (exportarExcelBtn) {
+  exportarExcelBtn.addEventListener('click', async () => {
+    const { data: itens } = await supabase.from('itens').select('*');
+    const itensBaixo = itens.filter(item => item.quantidade <= item.quantidade_minima);
+    const relatorio = itensBaixo.map(item => ({
+      Nome: item.nome,
+      'Qtd. Atual': item.quantidade,
+      'Qtd. Mínima': item.quantidade_minima,
+      Unidade: item.unidade,
+      Fornecedor: item.fornecedor,
+      'Sugestão de Compra': Math.max(item.quantidade_minima - item.quantidade, 0)
+    }));
+    if (relatorio.length === 0) {
+      showToast('Nenhum item abaixo do mínimo para exportar.', 'error');
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(relatorio);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Estoque Baixo');
+    XLSX.writeFile(wb, 'relatorio_estoque_baixo.xlsx');
+  });
+}
+
+// Chamar loadRelatorioBaixo ao exibir a seção
+const relatorioSection = document.getElementById('relatorio-baixo');
+if (relatorioSection) {
+  relatorioSection.addEventListener('show', loadRelatorioBaixo);
+}
+
+// ===============================
+// Histórico de Transações
+// ===============================
+async function loadHistorico() {
+  // Buscar histórico, itens e usuários
+  const { data: historico, error } = await supabase.from('historico').select('*').order('data', { ascending: false });
+  if (error) {
+    showToast('Erro ao carregar histórico: ' + error.message, 'error');
+    return;
+  }
+  // Buscar nomes dos itens
+  const itemIds = [...new Set(historico.map(h => h.item_id))];
+  let nomesItens = {};
+  if (itemIds.length > 0) {
+    const { data: itens } = await supabase.from('itens').select('id, nome').in('id', itemIds);
+    itens.forEach(i => { nomesItens[i.id] = i.nome; });
+  }
+  // Buscar nomes dos usuários
+  const usuarioIds = [...new Set(historico.map(h => h.usuario_id).filter(Boolean))];
+  let nomesUsuarios = {};
+  if (usuarioIds.length > 0) {
+    const { data: perfis } = await supabase.from('profiles').select('id, nome').in('id', usuarioIds);
+    perfis.forEach(u => { nomesUsuarios[u.id] = u.nome; });
+  }
+  renderHistoricoTabela(historico, nomesItens, nomesUsuarios);
+}
+
+function renderHistoricoTabela(historico, nomesItens, nomesUsuarios) {
+  const container = document.getElementById('historico-tabela');
+  if (!container) return;
+  if (!historico || historico.length === 0) {
+    container.innerHTML = '<div class="p-4 text-center text-gray-500">Nenhuma transação encontrada.</div>';
+    return;
+  }
+  let html = `<table class="min-w-full bg-white rounded shadow text-center">
+    <thead><tr>
+      <th class="px-4 py-2 text-center">Data</th>
+      <th class="px-4 py-2 text-left">Item</th>
+      <th class="px-4 py-2 text-center">Tipo</th>
+      <th class="px-4 py-2 text-center">Quantidade</th>
+      <th class="px-4 py-2 text-left">Usuário</th>
+      <th class="px-4 py-2 text-left">Fornecedor</th>
+      <th class="px-4 py-2 text-center">Unidade</th>
+    </tr></thead><tbody>`;
+  historico.forEach(h => {
+    const data = new Date(h.data).toLocaleString('pt-BR');
+    const item = nomesItens[h.item_id] || h.item_id || '-';
+    const usuario = nomesUsuarios[h.usuario_id] || h.usuario_id || '-';
+    let tipo = h.tipo;
+    if (tipo === 'entrada') tipo = 'Entrada';
+    else if (tipo === 'saida') tipo = 'Saída';
+    else if (tipo === 'exclusao') tipo = 'Exclusão';
+    html += `<tr>
+      <td class="px-4 py-2 text-center">${data}</td>
+      <td class="px-4 py-2 text-left">${item}</td>
+      <td class="px-4 py-2 text-center">${tipo}</td>
+      <td class="px-4 py-2 text-center">${h.quantidade}</td>
+      <td class="px-4 py-2 text-left">${usuario}</td>
+      <td class="px-4 py-2 text-left">${h.fornecedor || '-'}</td>
+      <td class="px-4 py-2 text-center">${h.unidade || '-'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// Chamar loadHistorico ao exibir a seção
+const historicoSection = document.getElementById('historico');
+if (historicoSection) {
+  historicoSection.addEventListener('show', loadHistorico);
+}
+
+// ===============================
+// Navegação SPA pelo menu
+// ===============================
+const menuBtns = document.querySelectorAll('.menu-btn');
+const sections = [
+  'dashboard',
+  'estoque',
+  'form-consumir-section',
+  'form-item-section',
+  'relatorio-baixo',
+  'historico'
+].map(id => document.getElementById(id));
+
+function showSection(sectionId) {
+  sections.forEach(sec => {
+    if (sec) sec.classList.add('hidden');
+  });
+  const sec = document.getElementById(sectionId);
+  if (sec) {
+    sec.classList.remove('hidden');
+    // Dispara evento customizado para carregar dados se necessário
+    sec.dispatchEvent(new Event('show'));
+  }
+  // Atualiza menu ativo
+  menuBtns.forEach(btn => {
+    if (btn.dataset.section === sectionId) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+}
+
+// ===============================
+// Controle de visibilidade do menu por perfil
+// ===============================
+function ajustarMenuPorPerfil(role) {
+  const menuDashboard = document.querySelector('.menu-btn[data-section="dashboard"]');
+  const menuEstoque = document.querySelector('.menu-btn[data-section="estoque"]');
+  const menuConsumir = document.querySelector('.menu-btn[data-section="form-consumir-section"]');
+  const menuAdicionar = document.querySelector('.menu-btn[data-section="form-item-section"]');
+  const menuRelatorio = document.querySelector('.menu-btn[data-section="relatorio-baixo"]');
+  const menuHistorico = document.querySelector('.menu-btn[data-section="historico"]');
+  if (role === 'operacional') {
+    if (menuEstoque) menuEstoque.style.display = 'none';
+    if (menuAdicionar) menuAdicionar.style.display = 'none';
+    if (menuRelatorio) menuRelatorio.style.display = 'none';
+    if (menuHistorico) menuHistorico.style.display = 'none';
+  } else {
+    if (menuEstoque) menuEstoque.style.display = '';
+    if (menuAdicionar) menuAdicionar.style.display = '';
+    if (menuRelatorio) menuRelatorio.style.display = '';
+    if (menuHistorico) menuHistorico.style.display = '';
+  }
+}
+
+// Bloquear acesso direto às seções restritas para operacional
+const sectionsRestritas = ['estoque', 'form-item-section', 'relatorio-baixo', 'historico'];
+menuBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const role = userRoleSpan.textContent.toLowerCase();
+    if (role === 'operacional' && sectionsRestritas.includes(btn.dataset.section)) {
+      showToast('Acesso restrito para este perfil.', 'error');
+      showSection('dashboard');
+      return;
+    }
+    showSection(btn.dataset.section);
+  });
+});
+
+// Exibir dashboard por padrão ao logar
+function showMain(role) {
+  loginContainer.classList.add('hidden');
+  mainContainer.classList.remove('hidden');
+  userRoleSpan.textContent = role === 'admin' ? 'Administrador' : 'Operacional';
+  ajustarMenuPorPerfil(role);
+  showSection('dashboard');
+  loadDashboard();
+}
+
+// ===============================
+// Toasts
+// ===============================
+function showToast(msg, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `px-4 py-3 rounded-lg shadow-lg text-white font-semibold flex items-center gap-2 mb-2 ` +
+    (type === 'success' ? 'bg-green-600' : 'bg-red-600');
+  toast.innerHTML = `<svg class=\"w-5 h-5\">${type === 'success'
+    ? '<use href=\"#heroicon-o-check-circle\" />'
+    : '<use href=\"#heroicon-o-x-circle\" />'}<\/svg>${msg}`;
+  document.getElementById('toast-container').appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// ===============================
+// Observação
+// ===============================
+// Substitua SUPABASE_URL e SUPABASE_KEY pelos valores do seu projeto.
+// Implemente as funções de carregamento e manipulação conforme o schema do seu Supabase.
