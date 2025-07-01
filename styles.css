@@ -1,0 +1,94 @@
+/* Tailwind CSS Customization */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9fafb; /* Light background */
+    color: #374151; /* Dark text */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.header {
+    background-color: #1f2937; /* Dark header */
+    color: #ffffff; /* White text */
+    padding: 1rem;
+    text-align: center;
+}
+
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block;
+    }
+    .desktop-only {
+        display: none;
+    }
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    border: 1px solid #e5e7eb; /* Light border */
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.table th {
+    background-color: #e5e7eb; /* Light gray header */
+}
+
+.card {
+    background-color: #ffffff; /* White card */
+    border: 1px solid #e5e7eb; /* Light border */
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.button {
+    background-color: #3b82f6; /* Blue button */
+    color: #ffffff; /* White text */
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #2563eb; /* Darker blue on hover */
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin: 1rem 0;
+}
+
+.alert-success {
+    background-color: #d1fae5; /* Light green */
+    color: #065f46; /* Dark green */
+}
+
+.alert-error {
+    background-color: #fee2e2; /* Light red */
+    color: #b91c1c; /* Dark red */
+}
