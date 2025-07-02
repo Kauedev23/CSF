@@ -113,6 +113,11 @@ async function loadDashboard() {
   const baixo = itens.filter(item => item.quantidade > 0 && item.quantidade <= item.quantidade_minima).length;
   const critico = itens.filter(item => item.quantidade === 0).length;
 
+  // Alerta visual de estoque baixo
+  if (itens.some(item => item.quantidade <= item.quantidade_minima)) {
+    showToast('Atenção: Existem itens abaixo do estoque mínimo!', 'error');
+  }
+
   // Consumo mensal (somar saídas do mês atual)
   const inicioMes = new Date();
   inicioMes.setDate(1);
@@ -438,6 +443,8 @@ formItem.addEventListener('submit', async (e) => {
   }
   // Inserir ou atualizar
   if (editandoItemId) {
+    // Buscar dados antigos para comparar
+    const { data: antigo } = await supabase.from('itens').select('*').eq('id', editandoItemId).single();
     // Atualizar item
     const { error } = await supabase
       .from('itens')
@@ -446,6 +453,27 @@ formItem.addEventListener('submit', async (e) => {
     if (error) {
       showToast('Erro ao atualizar item: ' + error.message, 'error');
       return;
+    }
+    // Comparar campos e registrar histórico detalhado
+    let detalhes = [];
+    if (antigo) {
+      if (antigo.nome !== nome) detalhes.push(`Nome: '${antigo.nome}' → '${nome}'`);
+      if (antigo.quantidade !== quantidade) detalhes.push(`Quantidade: ${antigo.quantidade} → ${quantidade}`);
+      if (antigo.quantidade_minima !== minima) detalhes.push(`Mínima: ${antigo.quantidade_minima} → ${minima}`);
+      if (antigo.unidade !== unidade) detalhes.push(`Unidade: '${antigo.unidade}' → '${unidade}'`);
+      if (antigo.fornecedor !== fornecedor) detalhes.push(`Fornecedor: '${antigo.fornecedor}' → '${fornecedor}'`);
+    }
+    if (detalhes.length > 0) {
+      const user = await supabase.auth.getUser();
+      await supabase.from('historico').insert([{
+        tipo: 'edicao',
+        item_id: editandoItemId,
+        quantidade,
+        usuario_id: user.data.user.id,
+        fornecedor,
+        unidade,
+        detalhes: detalhes.join('; ')
+      }]);
     }
     showToast('Item atualizado com sucesso!', 'success');
   } else {
@@ -607,6 +635,10 @@ formConsumir.addEventListener('submit', async (e) => {
 // ===============================
 // Relatório de Estoque Baixo
 // ===============================
+// Filtro por data no relatório de estoque baixo
+const filtroRelatorioInicio = document.getElementById('filtro-relatorio-inicio');
+const filtroRelatorioFim = document.getElementById('filtro-relatorio-fim');
+
 async function loadRelatorioBaixo() {
   const { data: itens, error } = await supabase.from('itens').select('*');
   if (error) {
@@ -614,7 +646,26 @@ async function loadRelatorioBaixo() {
     return;
   }
   // Filtrar itens abaixo do mínimo
-  const itensBaixo = itens.filter(item => item.quantidade <= item.quantidade_minima);
+  let itensBaixo = itens.filter(item => item.quantidade <= item.quantidade_minima);
+
+  // Filtrar por data de atualização, se disponível
+  const inicio = filtroRelatorioInicio && filtroRelatorioInicio.value ? new Date(filtroRelatorioInicio.value) : null;
+  const fim = filtroRelatorioFim && filtroRelatorioFim.value ? new Date(filtroRelatorioFim.value) : null;
+  if (inicio || fim) {
+    itensBaixo = itensBaixo.filter(item => {
+      const dataItem = item.updated_at ? new Date(item.updated_at) : null;
+      if (!dataItem) return false;
+      if (inicio && dataItem < inicio) return false;
+      if (fim) {
+        // Incluir o dia final inteiro
+        const fimAjustado = new Date(fim);
+        fimAjustado.setHours(23,59,59,999);
+        if (dataItem > fimAjustado) return false;
+      }
+      return true;
+    });
+  }
+
   // Calcular sugestão de compra
   const relatorio = itensBaixo.map(item => ({
     nome: item.nome,
@@ -657,12 +708,27 @@ function renderRelatorioTabela(relatorio) {
   container.innerHTML = html;
 }
 
-// Exportar relatório para Excel
+// Exportar relatório para Excel (apenas dados filtrados)
 const exportarExcelBtn = document.getElementById('exportar-excel-btn');
 if (exportarExcelBtn) {
   exportarExcelBtn.addEventListener('click', async () => {
     const { data: itens } = await supabase.from('itens').select('*');
-    const itensBaixo = itens.filter(item => item.quantidade <= item.quantidade_minima);
+    let itensBaixo = itens.filter(item => item.quantidade <= item.quantidade_minima);
+    const inicio = filtroRelatorioInicio && filtroRelatorioInicio.value ? new Date(filtroRelatorioInicio.value) : null;
+    const fim = filtroRelatorioFim && filtroRelatorioFim.value ? new Date(filtroRelatorioFim.value) : null;
+    if (inicio || fim) {
+      itensBaixo = itensBaixo.filter(item => {
+        const dataItem = item.updated_at ? new Date(item.updated_at) : null;
+        if (!dataItem) return false;
+        if (inicio && dataItem < inicio) return false;
+        if (fim) {
+          const fimAjustado = new Date(fim);
+          fimAjustado.setHours(23,59,59,999);
+          if (dataItem > fimAjustado) return false;
+        }
+        return true;
+      });
+    }
     const relatorio = itensBaixo.map(item => ({
       Nome: item.nome,
       'Qtd. Atual': item.quantidade,
@@ -913,3 +979,82 @@ drawerBtns.forEach(btn => {
     closeDrawer();
   });
 });
+
+if (filtroRelatorioInicio) filtroRelatorioInicio.addEventListener('change', loadRelatorioBaixo);
+if (filtroRelatorioFim) filtroRelatorioFim.addEventListener('change', loadRelatorioBaixo);
+
+// Customização do dashboard
+const customizarBtn = document.getElementById('customizar-dashboard-btn');
+const modalCustomizar = document.getElementById('modal-customizar-dashboard');
+const fecharModalCustomizar = document.getElementById('fechar-modal-customizar');
+const formCustomizar = document.getElementById('form-customizar-dashboard');
+
+function getDashboardPrefs() {
+  return JSON.parse(localStorage.getItem('dashboardPrefs') || '{}');
+}
+function setDashboardPrefs(prefs) {
+  localStorage.setItem('dashboardPrefs', JSON.stringify(prefs));
+}
+function aplicarDashboardPrefs() {
+  const prefs = getDashboardPrefs();
+  // Cards
+  document.querySelector('[id^="stat-total-itens"]').closest('.bg-blue-100').style.display = prefs['card-total'] === false ? 'none' : '';
+  document.querySelector('[id^="stat-baixo"]').closest('.bg-yellow-100').style.display = prefs['card-baixo'] === false ? 'none' : '';
+  document.querySelector('[id^="stat-critico"]').closest('.bg-red-100').style.display = prefs['card-critico'] === false ? 'none' : '';
+  document.querySelector('[id^="stat-consumo-mensal"]').closest('.bg-green-100').style.display = prefs['card-consumo'] === false ? 'none' : '';
+  // Gráficos
+  document.getElementById('chart-bar').parentElement.style.display = prefs['graf-bar'] === false ? 'none' : '';
+  document.getElementById('chart-pie').parentElement.style.display = prefs['graf-pie'] === false ? 'none' : '';
+}
+if (customizarBtn && modalCustomizar && fecharModalCustomizar && formCustomizar) {
+  customizarBtn.addEventListener('click', () => {
+    // Preencher checkboxes com prefs atuais
+    const prefs = getDashboardPrefs();
+    formCustomizar['card-total'].checked = prefs['card-total'] !== false;
+    formCustomizar['card-baixo'].checked = prefs['card-baixo'] !== false;
+    formCustomizar['card-critico'].checked = prefs['card-critico'] !== false;
+    formCustomizar['card-consumo'].checked = prefs['card-consumo'] !== false;
+    formCustomizar['graf-bar'].checked = prefs['graf-bar'] !== false;
+    formCustomizar['graf-pie'].checked = prefs['graf-pie'] !== false;
+    modalCustomizar.classList.remove('hidden');
+  });
+  fecharModalCustomizar.addEventListener('click', () => {
+    modalCustomizar.classList.add('hidden');
+  });
+  formCustomizar.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const prefs = {
+      'card-total': formCustomizar['card-total'].checked,
+      'card-baixo': formCustomizar['card-baixo'].checked,
+      'card-critico': formCustomizar['card-critico'].checked,
+      'card-consumo': formCustomizar['card-consumo'].checked,
+      'graf-bar': formCustomizar['graf-bar'].checked,
+      'graf-pie': formCustomizar['graf-pie'].checked
+    };
+    setDashboardPrefs(prefs);
+    aplicarDashboardPrefs();
+    modalCustomizar.classList.add('hidden');
+  });
+}
+document.addEventListener('DOMContentLoaded', aplicarDashboardPrefs);
+
+// Dark mode
+const toggleDarkmodeBtn = document.getElementById('toggle-darkmode');
+const iconDarkmode = document.getElementById('icon-darkmode');
+function setDarkMode(enabled) {
+  document.documentElement.classList.toggle('dark', enabled);
+  localStorage.setItem('darkmode', enabled ? '1' : '0');
+  if (iconDarkmode) {
+    iconDarkmode.innerHTML = enabled
+      ? '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1.5m0 15V21m8.485-8.485h-1.5m-15 0H3m15.364-6.364l-1.06 1.06m-12.728 0l-1.06-1.06m12.728 12.728l-1.06-1.06m-12.728 0l-1.06 1.06" />'
+      : '<path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0 1 12 21.75c-5.385 0-9.75-4.365-9.75-9.75 0-4.136 2.635-7.64 6.348-9.09a.75.75 0 0 1 .908.325.75.75 0 0 1-.062.954A7.501 7.501 0 0 0 12 19.5a7.48 7.48 0 0 0 6.561-3.904.75.75 0 0 1 .954-.062.75.75 0 0 1 .237.968Z" />';
+  }
+}
+if (toggleDarkmodeBtn) {
+  toggleDarkmodeBtn.addEventListener('click', () => {
+    const enabled = !document.documentElement.classList.contains('dark');
+    setDarkMode(enabled);
+  });
+}
+// Restaurar preferência ao carregar
+if (localStorage.getItem('darkmode') === '1') setDarkMode(true);

@@ -202,3 +202,82 @@ thead th {
 .bg-blue-700:hover, .bg-green-700:hover, .bg-red-700:hover {
   background: #1e3a8a !important;
 }
+
+/* Dark mode customizado */
+.dark body {
+  background: #181a20;
+  color: #f3f4f6;
+}
+.dark .bg-white {
+  background: #23272f !important;
+  color: #f3f4f6 !important;
+}
+.dark .bg-blue-100, .dark .bg-yellow-100, .dark .bg-red-100, .dark .bg-green-100 {
+  background: #223366 !important;
+  color: #fff !important;
+}
+.dark .text-blue-900, .dark .text-blue-700, .dark .text-yellow-700, .dark .text-red-700, .dark .text-green-700 {
+  color: #fff !important;
+}
+.dark .shadow, .dark .shadow-lg {
+  box-shadow: 0 2px 8px #0008 !important;
+}
+.dark input, .dark select, .dark textarea {
+  background: #23272f !important;
+  color: #f3f4f6 !important;
+  border-color: #374151 !important;
+}
+.dark input::placeholder, .dark select, .dark textarea::placeholder {
+  color: #b0b6c3 !important;
+}
+.dark .hover\:bg-blue-100:hover {
+  background: #2d3656 !important;
+}
+
+/* Modo dark para tabelas (linhas e cabeçalho) - corrigido para .dark */
+.dark table tr:nth-child(even) {
+  background: #23272f !important;
+}
+.dark table tr:nth-child(odd) {
+  background: #2d323b !important;
+}
+.dark table th {
+  background: #23272f !important;
+  color: #fff !important;
+}
+.dark table {
+  background: transparent !important;
+}
+.dark .bg-white {
+  background: #23272f !important;
+  color: #fff !important;
+}
+
+/* Modo dark para o menu lateral (drawer) */
+.dark #drawer-menu {
+  background: #23272f !important;
+  color: #fff !important;
+}
+.dark #drawer-menu .menu-btn {
+  color: #fff !important;
+}
+.dark #drawer-menu .menu-btn.active {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+.dark #drawer-menu .menu-btn:hover:not(.active),
+.dark #drawer-menu .menu-btn:focus:not(.active) {
+  background: #1e40af !important;
+  color: #fff !important;
+}
+.dark #drawer-menu svg {
+  color: #fff !important;
+}
+
+/* Modo dark para o menu superior (main-menu) */
+.dark #main-menu .menu-btn {
+  color: #fff !important;
+}
+.dark #main-menu .menu-btn svg {
+  color: #fff !important;
+}

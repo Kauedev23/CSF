@@ -1,35 +1,49 @@
-# Sistema de Gestão de Estoque - SPA
+# Estoque Fácil - Documentação
 
-## Premissas
-- SPA (Single Page Application) usando HTML, CSS (Tailwind + customizado) e JavaScript puro.
-- Backend baseado em Supabase (autenticação, banco de dados e funções RPC).
-- Responsivo para desktop e mobile.
-- Exportação de relatórios para Excel (SheetJS).
-- Gráficos com Chart.js.
-- Código e interface em português.
-- Estrutura de arquivos separada: `index.html`, `styles.css`, `app.js`, `DOCUMENTACAO.md`.
+## Visão Geral
+Sistema de gestão de estoque 100% SPA, responsivo, com backend Supabase, gráficos Chart.js, exportação Excel (SheetJS) e autenticação por perfil (admin/operacional).
 
-## Estrutura de Arquivos
-- **index.html**: Estrutura da interface, containers dos módulos e inclusão de bibliotecas externas.
-- **styles.css**: Estilos customizados, responsividade e integração com Tailwind.
-- **app.js**: Lógica de frontend, integração com Supabase, manipulação de DOM e eventos.
-- **DOCUMENTACAO.md**: Documentação detalhada do projeto.
+## Funcionalidades
+- **Login:** Tela de login com fundo customizável (imagem ou vídeo), contraste otimizado, acessível.
+- **Dashboard:** Cards coloridos (azul escuro, azul médio, azul claro, laranja), gráficos de barras e pizza (tons de azul), estatísticas em destaque.
+- **Menu:**
+  - Menu superior (desktop) e menu lateral (drawer) no mobile.
+  - Botão hambúrguer visível apenas no mobile, com z-index elevado para máxima visibilidade.
+  - Drawer fecha ao clicar fora ou em qualquer aba.
+  - Navegação SPA: apenas uma seção visível por vez, sem recarregar a página.
+- **Estoque:** Listagem, filtro, status visual, ações rápidas (consumir, editar, excluir), responsivo.
+- **Adicionar/Editar Item:** Formulário validado, impede duplicidade, soma quantidade se nome já existe.
+- **Consumir Item:** Seleção dinâmica, validação, histórico automático.
+- **Relatório:** Estoque baixo, exportação Excel, visualização responsiva.
+- **Histórico:** Tabela responsiva, nomes de usuário/item, datas formatadas.
+- **Acessibilidade:** Contraste de textos, navegação por teclado, ícones SVG inline, textos alternativos.
 
-## Visão Geral das Funcionalidades
-- **Autenticação de Usuário**: Login, logout, perfis admin e operacional.
-- **Dashboard**: Estatísticas rápidas e gráficos.
-- **Gestão de Estoque**: Visualização, filtros, adição, edição e exclusão de itens.
-- **Adicionar/Editar Item**: Formulário com validação e histórico de entrada.
-- **Consumir Item**: Registro de saída e validação de quantidade.
-- **Relatório de Estoque Baixo**: Listagem, sugestão de compra e exportação para Excel.
-- **Histórico de Transações**: Tabela de todas as transações.
+## Tecnologias
+- **Frontend:** HTML, Tailwind CSS, JavaScript puro
+- **Backend:** Supabase (auth, banco, RPC)
+- **Gráficos:** Chart.js
+- **Exportação Excel:** SheetJS
 
-## Expansibilidade
-O sistema foi projetado para ser facilmente expansível para novos módulos, seguindo boas práticas de organização e segurança.
+## Responsividade
+- Layout mobile-first, cards e tabelas adaptáveis
+- Menu lateral (drawer) só aparece no mobile
+- Botão do menu hambúrguer só no mobile, sempre visível
+- Tabelas com scroll horizontal em telas pequenas
 
-## Como iniciar
-1. Configure o projeto no Supabase (tabelas, autenticação e funções RPC).
-2. Atualize as chaves de API no `app.js`.
-3. Abra o `index.html` em seu navegador.
+## Acessibilidade
+- Contraste garantido em todos os textos e botões
+- Ícones SVG inline com alt/texto acessível
+- Navegação SPA sem recarregar página
 
-## Detalhamento de cada módulo e integração com Supabase será descrito nas próximas seções. 
+## Personalização
+- Logo customizável (logo.png)
+- Fundo da tela de login pode ser imagem ou vídeo
+- Paleta de cores baseada em tons de azul e laranja
+
+## Observações
+- Substitua as chaves do Supabase no app.js
+- Para trocar a logo, basta substituir o arquivo logo.png
+- Para trocar o fundo do login, altere o arquivo e o caminho no index.html
+
+---
+Dúvidas ou sugestões? Abra uma issue ou entre em contato! 
