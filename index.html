@@ -12,12 +12,10 @@
   <nav class="bg-white shadow fixed w-full z-10 top-0 left-0">
     <div class="container mx-auto flex items-center justify-between px-4 py-3">
       <div class="flex items-center gap-2">
-        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 16.5V7.5a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 7.5v9a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4a2 2 0 001-1.73z" />
-        </svg>
-        <span class="text-2xl font-bold text-blue-700">Estoque Fácil</span>
+        <img src="logo.png" alt="Logo CSF" class="w-8 h-8 object-contain" />
+        <span class="text-2xl font-bold text-blue-900"></span>
       </div>
-      <button id="menu-toggle" class="md:hidden flex items-center px-2 py-1 border rounded text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Abrir menu">
+      <button id="menu-toggle" class="flex items-center px-2 py-1 border rounded text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Abrir menu">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-blue-700">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
@@ -134,27 +132,31 @@
     </div>
     <div id="main-container" class="hidden">
       <section id="dashboard" class="mb-10">
-        <h2 class="text-2xl font-bold mb-4 text-blue-700 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-home" /></svg>Dashboard</h2>
+        <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-home" /></svg>Dashboard</h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <!-- Card: Total de Itens -->
           <div class="bg-blue-100 p-6 rounded-xl shadow flex flex-col items-center">
             <svg class="w-8 h-8 text-blue-600 mb-2"><use href="#heroicon-o-cube" /></svg>
-            <div class="text-2xl font-bold text-blue-800" id="stat-total-itens">0</div>
-            <div class="text-blue-700">Total de Itens</div>
+            <div class="text-4xl font-extrabold text-blue-800 mb-1" id="stat-total-itens">0</div>
+            <div class="text-2xl font-bold text-blue-700">Total de Itens</div>
           </div>
+          <!-- Card: Estoque Baixo -->
           <div class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center">
             <svg class="w-8 h-8 text-yellow-500 mb-2"><use href="#heroicon-o-exclamation-triangle" /></svg>
-            <div class="text-2xl font-bold text-yellow-700" id="stat-baixo">0</div>
-            <div class="text-yellow-700">Estoque Baixo</div>
+            <div class="text-4xl font-extrabold text-yellow-700 mb-1" id="stat-baixo">0</div>
+            <div class="text-2xl font-bold text-yellow-700">Estoque Baixo</div>
           </div>
+          <!-- Card: Crítico -->
           <div class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center">
             <svg class="w-8 h-8 text-red-500 mb-2"><use href="#heroicon-o-x-circle" /></svg>
-            <div class="text-2xl font-bold text-red-700" id="stat-critico">0</div>
-            <div class="text-red-700">Crítico</div>
+            <div class="text-4xl font-extrabold text-red-700 mb-1" id="stat-critico">0</div>
+            <div class="text-2xl font-bold text-red-700">Crítico</div>
           </div>
+          <!-- Card: Consumo Mensal -->
           <div class="bg-green-100 p-6 rounded-xl shadow flex flex-col items-center">
             <svg class="w-8 h-8 text-green-600 mb-2"><use href="#heroicon-o-chart-bar" /></svg>
-            <div class="text-2xl font-bold text-green-700" id="stat-consumo-mensal">0</div>
-            <div class="text-green-700">Consumo Mensal</div>
+            <div class="text-4xl font-extrabold text-green-700 mb-1" id="stat-consumo-mensal">0</div>
+            <div class="text-2xl font-bold text-green-700">Consumo Mensal</div>
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -244,7 +246,7 @@
       </section>
       <section id="historico" class="mb-10">
         <h2 class="text-2xl font-bold mb-4 text-blue-700 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-clock" /></svg>Histórico de Transações</h2>
-        <div id="historico-tabela"></div>
+        <div id="historico-tabela" class="w-full overflow-x-auto"></div>
       </section>
     </div>
   </div>

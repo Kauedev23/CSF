@@ -20,25 +20,25 @@ input:focus, select:focus, button:focus {
 
 /* Status visual dos itens */
 .status-normal {
-  color: #10b981;
+  color: #2563eb;
   font-weight: bold;
-  background: #d1fae5;
+  background: #dbeafe;
   border-radius: 9999px;
   padding: 2px 10px;
   font-size: 0.9em;
 }
 .status-baixo {
-  color: #f59e42;
+  color: #1e40af;
   font-weight: bold;
-  background: #fef3c7;
+  background: #bfdbfe;
   border-radius: 9999px;
   padding: 2px 10px;
   font-size: 0.9em;
 }
 .status-critico {
-  color: #ef4444;
+  color: #1e3a8a;
   font-weight: bold;
-  background: #fee2e2;
+  background: #93c5fd;
   border-radius: 9999px;
   padding: 2px 10px;
   font-size: 0.9em;
@@ -70,7 +70,7 @@ table th { background: #f1f5f9; font-weight: 600; }
 }
 .menu-btn:hover:not(.active),
 .menu-btn:focus:not(.active) {
-  background: #3b82f6;
+  background: #1e40af;
   color: #fff !important;
 }
 .menu-btn svg { transition: color 0.2s; }
@@ -79,10 +79,10 @@ table th { background: #f1f5f9; font-weight: 600; }
 /* Sombra e transição para cards e seções */
 .bg-white, .bg-blue-100, .bg-yellow-100, .bg-red-100, .bg-green-100 {
   transition: box-shadow 0.2s, background 0.2s, transform 0.1s;
-  box-shadow: 0 2px 8px #0001;
+  box-shadow: 0 2px 8px #2563eb22;
 }
 .bg-white:hover, .bg-blue-100:hover, .bg-yellow-100:hover, .bg-red-100:hover, .bg-green-100:hover {
-  box-shadow: 0 6px 24px #0002;
+  box-shadow: 0 6px 24px #2563eb33;
   transform: translateY(-2px) scale(1.01);
 }
 
@@ -90,7 +90,7 @@ button, .menu-btn {
   transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
 }
 button:active, .menu-btn:active {
-  transform: scale(0.97);
+  background: #1e3a8a !important;
 }
 
 table {
@@ -153,4 +153,52 @@ thead th {
 }
 @media (min-width: 768px) {
   #drawer-backdrop { display: none !important; }
+}
+
+/* Cores exclusivas para os cards do dashboard - tons renovados */
+.bg-blue-100 {
+  background: #1e3a8a !important; /* Azul escuro */
+}
+.bg-yellow-100 {
+  background: #3b82f6 !important; /* Azul médio */
+}
+.bg-red-100 {
+  background: #60a5fa !important; /* Azul claro */
+}
+.bg-green-100 {
+  background: #ff9800 !important; /* Laranja vibrante */
+}
+
+.text-blue-800 {
+  color: #fff !important;
+}
+.text-yellow-700 {
+  color: #fff !important;
+}
+.text-red-700 {
+  color: #fff !important;
+}
+.text-green-700 {
+  color: #a04000 !important; /* Laranja escuro para contraste no card laranja */
+}
+
+/* Ajustar textos dos cards */
+.text-blue-700, .text-yellow-700, .text-red-700, .text-green-700 {
+  color: #ffffff !important;
+}
+
+/* Ajustar botões principais */
+.bg-blue-600, .bg-green-600, .bg-red-600 {
+  background: #2563eb !important;
+}
+.bg-blue-700, .bg-green-700, .bg-red-700 {
+  background: #1e40af !important;
+}
+
+/* Ajustar hover dos botões */
+.bg-blue-600:hover, .bg-green-600:hover, .bg-red-600:hover {
+  background: #1e40af !important;
+}
+.bg-blue-700:hover, .bg-green-700:hover, .bg-red-700:hover {
+  background: #1e3a8a !important;
 }

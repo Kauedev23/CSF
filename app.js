@@ -158,7 +158,7 @@ async function loadDashboard() {
   const normal = itens.filter(item => item.quantidade > item.quantidade_minima).length;
   const dataPie = [normal, baixo, critico];
   const labelsPie = ['Normal', 'Baixo', 'Crítico'];
-  const colorsPie = ['#10b981', '#f59e42', '#ef4444'];
+  const colorsPie = ['#2563eb', '#60a5fa', '#1e3a8a']; // Tons de azul
 
   // Renderizar gráficos
   renderBarChart(labelsBar, dataBar);
@@ -880,12 +880,13 @@ function closeDrawer() {
 if (menuToggle) menuToggle.addEventListener('click', openDrawer);
 if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
 if (drawerBackdrop) drawerBackdrop.addEventListener('click', closeDrawer);
-// Fechar drawer ao selecionar uma aba
-const drawerBtns = drawerMenu.querySelectorAll('.menu-btn');
-drawerBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    closeDrawer();
-  });
+// Também fecha o drawer ao clicar fora dele (em qualquer lugar fora do drawer-menu)
+document.addEventListener('mousedown', function(e) {
+  if (!drawerMenu.classList.contains('-translate-x-full')) {
+    if (!drawerMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+      closeDrawer();
+    }
+  }
 });
 // Sincronizar seleção de abas entre drawer e menu desktop
 function setActiveMenu(sectionId) {
