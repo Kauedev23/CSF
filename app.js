@@ -647,13 +647,7 @@ consumirItemSelect.addEventListener('change', function() {
 if (cancelarConsumirBtn) {
   cancelarConsumirBtn.addEventListener('click', () => {
     formConsumirSection.classList.add('hidden');
-    // Corrigir: para operacional, volta para dashboard; para admin, volta para estoque
-    const role = userRoleSpan.textContent.toLowerCase();
-    if (role === 'operacional') {
-      showSection('dashboard');
-    } else {
-      document.getElementById('estoque').classList.remove('hidden');
-    }
+    document.getElementById('estoque').classList.remove('hidden');
   });
 }
 
@@ -844,7 +838,7 @@ function filtrarHistorico() {
   const inicio = document.getElementById('filtro-inicio-historico').value;
   const fim = document.getElementById('filtro-fim-historico').value;
   const fornecedor = document.getElementById('filtro-fornecedor-historico').value.trim().toLowerCase();
-  const itemId = document.getElementById('filtro-item-historico').value;
+  const item = document.getElementById('filtro-item-historico').value.trim().toLowerCase();
 
   historico = historico.filter(h => {
     let ok = true;
@@ -868,11 +862,12 @@ function filtrarHistorico() {
     }
     // Filtro por fornecedor
     if (fornecedor) {
-      ok = ok && (h.fornecedor && h.fornecedor.toLowerCase() === fornecedor);
+      ok = ok && (h.fornecedor && h.fornecedor.toLowerCase().includes(fornecedor));
     }
     // Filtro por item
-    if (itemId) {
-      ok = ok && (h.item_id == itemId);
+    if (item) {
+      const nomeItem = nomesItensCache[h.item_id] ? nomesItensCache[h.item_id].toLowerCase() : '';
+      ok = ok && nomeItem.includes(item);
     }
     return ok;
   });
@@ -921,8 +916,6 @@ async function loadHistorico() {
     perfis.forEach(u => { nomesUsuariosCache[u.id] = u.nome; });
   }
   renderHistoricoTabela(historico, nomesItensCache, nomesUsuariosCache);
-  preencherSelectFornecedores();
-  preencherSelectItens();
 }
 
 function renderHistoricoTabela(historico, nomesItens, nomesUsuarios) {
@@ -1207,122 +1200,60 @@ if (localStorage.getItem('darkmode') === '1') setDarkMode(true);
 function renderDashboardCards(critico = 0, baixo = 0) {
   const dashboardSection = document.getElementById('dashboard');
   if (!dashboardSection) return;
-  const html = `<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 flex-nowrap overflow-x-auto dashboard-cards-row">
-    <div class="bg-blue-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in" title="Quantidade total de produtos cadastrados no estoque.">
-      <svg class="w-8 h-8 text-blue-600 mb-2"><use href="#heroicon-o-cube" /></svg>
-      <div class="text-4xl font-extrabold text-blue-800 mb-1" id="stat-total-itens">0</div>
-      <div class="text-2xl font-bold text-blue-700">Total de Itens</div>
-    </div>
-    <div class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos abaixo do estoque mínimo.">
-      ${(baixo > 0) ? `<span class='dashboard-badge baixo'>Baixo!</span>` : ''}
-      <svg class="w-8 h-8 text-yellow-500 mb-2"><use href="#heroicon-o-exclamation-triangle" /></svg>
-      <div class="text-4xl font-extrabold text-yellow-700 mb-1" id="stat-baixo">0</div>
-      <div class="text-2xl font-bold text-yellow-700">Estoque Baixo</div>
-    </div>
-    <div class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos com estoque crítico (zerado).">
-      ${(critico > 0) ? `<span class='dashboard-badge critico'>Crítico!</span>` : ''}
-      <svg class="w-8 h-8 text-red-500 mb-2"><use href="#heroicon-o-x-circle" /></svg>
-      <div class="text-4xl font-extrabold text-red-700 mb-1" id="stat-critico">0</div>
-      <div class="text-2xl font-bold text-red-700">Crítico</div>
-    </div>
-    <div class="bg-green-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in" title="Total de itens consumidos neste mês.">
-      <svg class="w-8 h-8 text-green-600 mb-2"><use href="#heroicon-o-chart-bar" /></svg>
-      <div class="text-4xl font-extrabold text-green-700 mb-1" id="stat-consumo-mensal">0</div>
-      <div class="text-2xl font-bold text-green-700">Consumo Mensal</div>
-    </div>
-  </div>`;
-  const skeletonGrid = dashboardSection.querySelector('.grid');
+  // Decide layout conforme largura da tela
+  const isMobile = window.innerWidth < 769;
+  let html = '';
+  if (isMobile) {
+    html = `<div class="dashboard-cards-row-mobile flex flex-nowrap gap-4 mb-6 px-2 justify-center items-stretch w-full" style="scrollbar-width: none; -ms-overflow-style: none; overflow-x: auto;">
+      <div class="bg-blue-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full" title="Quantidade total de produtos cadastrados no estoque.">
+        <svg class="w-8 h-8 text-blue-600 mb-2"><use href="#heroicon-o-cube" /></svg>
+        <div class="text-4xl font-extrabold text-blue-800 mb-1" id="stat-total-itens">0</div>
+        <div class="text-2xl font-bold text-blue-700">Total de Itens</div>
+      </div>
+      <div class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full relative" title="Quantidade de produtos abaixo do estoque mínimo.">
+        ${(baixo > 0) ? `<span class='dashboard-badge baixo'>Baixo!</span>` : ''}
+        <svg class="w-8 h-8 text-yellow-500 mb-2"><use href="#heroicon-o-exclamation-triangle" /></svg>
+        <div class="text-4xl font-extrabold text-yellow-700 mb-1" id="stat-baixo">0</div>
+        <div class="text-2xl font-bold text-yellow-700">Estoque Baixo</div>
+      </div>
+      <div class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full relative" title="Quantidade de produtos com estoque crítico (zerado).">
+        ${(critico > 0) ? `<span class='dashboard-badge critico'>Crítico!</span>` : ''}
+        <svg class="w-8 h-8 text-red-500 mb-2"><use href="#heroicon-o-x-circle" /></svg>
+        <div class="text-4xl font-extrabold text-red-700 mb-1" id="stat-critico">0</div>
+        <div class="text-2xl font-bold text-red-700">Crítico</div>
+      </div>
+      <div class="bg-green-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full" title="Total de itens consumidos neste mês.">
+        <svg class="w-8 h-8 text-green-600 mb-2"><use href="#heroicon-o-chart-bar" /></svg>
+        <div class="text-4xl font-extrabold text-green-700 mb-1" id="stat-consumo-mensal">0</div>
+        <div class="text-2xl font-bold text-green-700">Consumo Mensal</div>
+      </div>
+    </div>`;
+  } else {
+    html = `<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-blue-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in" title="Quantidade total de produtos cadastrados no estoque.">
+        <svg class="w-8 h-8 text-blue-600 mb-2"><use href="#heroicon-o-cube" /></svg>
+        <div class="text-4xl font-extrabold text-blue-800 mb-1" id="stat-total-itens">0</div>
+        <div class="text-2xl font-bold text-blue-700">Total de Itens</div>
+      </div>
+      <div class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos abaixo do estoque mínimo.">
+        ${(baixo > 0) ? `<span class='dashboard-badge baixo'>Baixo!</span>` : ''}
+        <svg class="w-8 h-8 text-yellow-500 mb-2"><use href="#heroicon-o-exclamation-triangle" /></svg>
+        <div class="text-4xl font-extrabold text-yellow-700 mb-1" id="stat-baixo">0</div>
+        <div class="text-2xl font-bold text-yellow-700">Estoque Baixo</div>
+      </div>
+      <div class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos com estoque crítico (zerado).">
+        ${(critico > 0) ? `<span class='dashboard-badge critico'>Crítico!</span>` : ''}
+        <svg class="w-8 h-8 text-red-500 mb-2"><use href="#heroicon-o-x-circle" /></svg>
+        <div class="text-4xl font-extrabold text-red-700 mb-1" id="stat-critico">0</div>
+        <div class="text-2xl font-bold text-red-700">Crítico</div>
+      </div>
+      <div class="bg-green-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in" title="Total de itens consumidos neste mês.">
+        <svg class="w-8 h-8 text-green-600 mb-2"><use href="#heroicon-o-chart-bar" /></svg>
+        <div class="text-4xl font-extrabold text-green-700 mb-1" id="stat-consumo-mensal">0</div>
+        <div class="text-2xl font-bold text-green-700">Consumo Mensal</div>
+      </div>
+    </div>`;
+  }
+  const skeletonGrid = dashboardSection.querySelector('.grid, .dashboard-cards-row-mobile');
   if (skeletonGrid) skeletonGrid.outerHTML = html;
 }
-
-// Preencher select de fornecedores únicos
-function preencherSelectFornecedores() {
-  const select = document.getElementById('filtro-fornecedor-historico');
-  if (!select) return;
-  // Limpa opções exceto a primeira
-  select.innerHTML = '<option value="">Todos</option>';
-  // Coleta fornecedores únicos do histórico
-  const fornecedores = [...new Set(historicoCache.map(h => h.fornecedor).filter(f => f && f.trim() !== ''))];
-  fornecedores.forEach(f => {
-    const opt = document.createElement('option');
-    opt.value = f;
-    opt.textContent = f;
-    select.appendChild(opt);
-  });
-}
-
-// Preencher select de itens únicos
-function preencherSelectItens() {
-  const select = document.getElementById('filtro-item-historico');
-  if (!select) return;
-  select.innerHTML = '<option value="">Todos</option>';
-  // Coleta ids únicos do histórico
-  const itemIds = [...new Set(historicoCache.map(h => h.item_id).filter(i => i))];
-  itemIds.forEach(id => {
-    const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = nomesItensCache[id] || id;
-    select.appendChild(opt);
-  });
-}
-
-// Função para exportar histórico filtrado para Excel
-function exportarHistoricoParaExcel() {
-  // Pega os dados atualmente exibidos (após filtro)
-  let historico = historicoCache;
-  const mes = document.getElementById('filtro-mes-historico').value;
-  const inicio = document.getElementById('filtro-inicio-historico').value;
-  const fim = document.getElementById('filtro-fim-historico').value;
-  const fornecedor = document.getElementById('filtro-fornecedor-historico').value.trim().toLowerCase();
-  const itemId = document.getElementById('filtro-item-historico').value;
-
-  historico = historico.filter(h => {
-    let ok = true;
-    if (mes) {
-      const data = new Date(h.data);
-      const mesFiltro = mes.split('-');
-      ok = ok && (data.getFullYear() === parseInt(mesFiltro[0]) && (data.getMonth() + 1) === parseInt(mesFiltro[1]));
-    }
-    if (inicio) {
-      const dataInicio = new Date(inicio + 'T00:00:00');
-      const dataRegistro = new Date(h.data);
-      ok = ok && (dataRegistro >= dataInicio);
-    }
-    if (fim) {
-      const dataFim = new Date(fim + 'T23:59:59.999');
-      const dataRegistro = new Date(h.data);
-      ok = ok && (dataRegistro <= dataFim);
-    }
-    if (fornecedor) {
-      ok = ok && (h.fornecedor && h.fornecedor.toLowerCase() === fornecedor);
-    }
-    if (itemId) {
-      ok = ok && (h.item_id == itemId);
-    }
-    return ok;
-  });
-
-  // Monta os dados para exportação
-  const dadosExport = historico.map(h => ({
-    'Data': new Date(h.data).toLocaleString('pt-BR'),
-    'Item': nomesItensCache[h.item_id] || h.item_id || '-',
-    'Tipo': h.tipo === 'entrada' ? 'Entrada' : h.tipo === 'saida' ? 'Saída' : h.tipo === 'exclusao' ? 'Exclusão' : h.tipo,
-    'Quantidade': h.quantidade,
-    'Usuário': nomesUsuariosCache[h.usuario_id] || h.usuario_id || '-',
-    'Fornecedor': h.fornecedor || '-',
-    'Unidade': h.unidade || '-',
-    'Detalhes': h.detalhes || ''
-  }));
-
-  // Cria a planilha e exporta
-  const ws = XLSX.utils.json_to_sheet(dadosExport);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Histórico');
-  XLSX.writeFile(wb, 'historico_transacoes.xlsx');
-}
-
-// Listener para o botão de exportar
-window.addEventListener('DOMContentLoaded', () => {
-  const btnExportar = document.getElementById('btn-exportar-excel-historico');
-  if (btnExportar) btnExportar.addEventListener('click', exportarHistoricoParaExcel);
-});

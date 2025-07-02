@@ -12,15 +12,63 @@
     gap: 1rem !important;
     padding-left: 1rem;
     padding-right: 1rem;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    box-sizing: border-box;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE 10+ */
   }
   .dashboard-cards-row::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none !important; /* Chrome/Safari */
   }
   .dashboard-card {
-    min-width: 260px;
-    flex: 0 0 auto;
+    min-width: 260px !important;
+    max-width: 90vw;
+    flex: 0 0 auto !important;
+  }
+  .mobile-only {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .mobile-only > div.bg-white {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 1.1rem 1rem 0.7rem 1rem !important;
+    border-radius: 0.8rem;
+    box-sizing: border-box;
+    word-break: break-word;
+  }
+  .mobile-only > div.bg-white .flex {
+    flex-wrap: wrap;
+    gap: 0.7rem 1.2rem;
+  }
+  .mobile-only > div.bg-white b, .mobile-only > div.bg-white strong {
+    word-break: break-word;
+  }
+  .mobile-only > div.bg-white span, .mobile-only > div.bg-white label, .mobile-only > div.bg-white div {
+    word-break: break-word;
+  }
+  #relatorio-tabela {
+    overflow-x: visible !important;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  #relatorio-tabela table {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+  #relatorio-tabela th, #relatorio-tabela td {
+    word-break: break-word;
+    white-space: normal !important;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  /* Remove overflow-x de grid que possa atrapalhar o carrossel */
+  #dashboard .grid,
+  #dashboard .grid-cols-1,
+  #dashboard .md\:grid-cols-4 {
+    overflow-x: unset !important;
   }
 }
 
@@ -417,6 +465,9 @@ thead th {
     padding-left: 0;
     padding-right: 0;
   }
+  .dashboard-cards-row-mobile {
+    display: none !important;
+  }
   .dashboard-card {
     min-width: 0;
     flex: 1 1 0%;
@@ -520,8 +571,8 @@ canvas, .bg-white > canvas, .bg-white > div > canvas {
 }
 @media (min-width: 768px) {
   #dashboard, #main-container, .container {
-    padding-left: 32px;
-    padding-right: 32px;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
   }
 }
 .grid, .grid-cols-1, .md\:grid-cols-4, .md\:grid-cols-2 {
@@ -529,4 +580,332 @@ canvas, .bg-white > canvas, .bg-white > div > canvas {
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: auto;
+}
+
+#login-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  z-index: 10;
+}
+#login-container > div {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+  box-shadow: 0 4px 32px #0002;
+  padding: 2.5rem;
+}
+@media (max-width: 480px) {
+  #login-container > div {
+    padding: 1.25rem;
+  }
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+#login-form input {
+  margin-bottom: 0;
+}
+#login-form button[type="submit"] {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+#login-container > div {
+  text-align: center;
+}
+
+.hidden { display: none !important; }
+
+/* Formulário de consumir item - responsivo e compacto */
+#form-consumir-section form {
+  max-width: 380px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1rem !important;
+  border-radius: 1rem;
+  box-shadow: 0 2px 16px #2563eb22;
+  background: #fff;
+}
+@media (min-width: 600px) {
+  #form-consumir-section form {
+    max-width: 420px;
+    padding: 2rem 2.5rem !important;
+  }
+}
+#form-consumir-section label {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+#form-consumir-section input,
+#form-consumir-section select {
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
+  border-radius: 0.7rem;
+  border: 1px solid #d1d5db;
+  margin-bottom: 0.5rem;
+  background: #f8fafc;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+#form-consumir-section input:focus,
+#form-consumir-section select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #2563eb33;
+}
+#form-consumir-section .flex {
+  gap: 0.5rem;
+}
+#form-consumir-section button {
+  padding: 0.5rem 1.1rem;
+  font-size: 1rem;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  box-shadow: 0 1px 4px #0001;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+#form-consumir-section button[type="submit"] {
+  background: #22c55e;
+  color: #fff;
+}
+#form-consumir-section button[type="submit"]:hover {
+  background: #16a34a;
+}
+#form-consumir-section button[type="button"] {
+  background: #e5e7eb;
+  color: #374151;
+}
+#form-consumir-section button[type="button"]:hover {
+  background: #d1d5db;
+}
+@media (max-width: 480px) {
+  #form-consumir-section form {
+    padding: 1rem 0.5rem !important;
+    max-width: 98vw;
+  }
+  #form-consumir-section input,
+  #form-consumir-section select {
+    font-size: 0.98rem;
+    padding: 0.5rem 0.7rem;
+  }
+  #form-consumir-section button {
+    font-size: 0.98rem;
+    padding: 0.45rem 0.8rem;
+  }
+}
+
+/* Formulário de adicionar/editar item - responsivo e compacto */
+#form-item-section form {
+  max-width: 380px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1rem !important;
+  border-radius: 1rem;
+  box-shadow: 0 2px 16px #2563eb22;
+  background: #fff;
+}
+@media (min-width: 600px) {
+  #form-item-section form {
+    max-width: 420px;
+    padding: 2rem 2.5rem !important;
+  }
+}
+#form-item-section label {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+#form-item-section input {
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
+  border-radius: 0.7rem;
+  border: 1px solid #d1d5db;
+  margin-bottom: 0.5rem;
+  background: #f8fafc;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+#form-item-section input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #2563eb33;
+}
+#form-item-section .flex {
+  gap: 0.5rem;
+}
+#form-item-section button {
+  padding: 0.5rem 1.1rem;
+  font-size: 1rem;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  box-shadow: 0 1px 4px #0001;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+#form-item-section button[type="submit"] {
+  background: #2563eb;
+  color: #fff;
+}
+#form-item-section button[type="submit"]:hover {
+  background: #1e40af;
+}
+#form-item-section button[type="button"] {
+  background: #e5e7eb;
+  color: #374151;
+}
+#form-item-section button[type="button"]:hover {
+  background: #d1d5db;
+}
+@media (max-width: 480px) {
+  #form-item-section form {
+    padding: 1rem 0.5rem !important;
+    max-width: 98vw;
+  }
+  #form-item-section input {
+    font-size: 0.98rem;
+    padding: 0.5rem 0.7rem;
+  }
+  #form-item-section button {
+    font-size: 0.98rem;
+    padding: 0.45rem 0.8rem;
+  }
+}
+
+/* Modal de customização do dashboard - compacto e responsivo */
+#modal-customizar-dashboard {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0,0,0,0.35) !important;
+}
+#modal-customizar-dashboard > div {
+  max-width: 270px;
+  width: 96vw;
+  margin: 0 auto;
+  padding: 1rem 0.7rem !important;
+  border-radius: 1rem;
+  box-shadow: 0 2px 16px #2563eb22;
+  background: #23272f;
+  position: relative;
+}
+#modal-customizar-dashboard h3 {
+  font-size: 1.08rem;
+  margin-bottom: 0.7rem;
+}
+#modal-customizar-dashboard label {
+  font-size: 0.98rem;
+  margin-bottom: 0.18rem;
+}
+#modal-customizar-dashboard input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+}
+#modal-customizar-dashboard button[type="submit"] {
+  padding: 0.5rem 0;
+  font-size: 0.98rem;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  box-shadow: 0 1px 4px #0001;
+  width: 100%;
+  max-width: 150px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 600px) {
+  #modal-customizar-dashboard > div {
+    max-width: 270px;
+    padding: 1.2rem 1.2rem !important;
+  }
+}
+@media (max-width: 480px) {
+  #modal-customizar-dashboard > div {
+    padding: 0.7rem 0.3rem !important;
+    max-width: 98vw;
+  }
+  #modal-customizar-dashboard button[type="submit"] {
+    font-size: 0.96rem;
+    padding: 0.45rem 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Forçar remoção de barra de rolagem lateral dos gráficos do dashboard */
+#dashboard .grid.md\:grid-cols-2,
+#dashboard .bg-white,
+#dashboard .grid,
+#dashboard {
+  overflow-x: visible !important;
+  max-width: 100% !important;
+}
+
+#relatorio-tabela {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  margin: 0 auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+#relatorio-tabela table {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  table-layout: fixed !important;
+  overflow-x: hidden !important;
+}
+#relatorio-tabela th, #relatorio-tabela td {
+  word-break: break-word;
+  white-space: normal !important;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.dashboard-cards-row-mobile {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  justify-content: flex-start;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dashboard-cards-row-mobile::-webkit-scrollbar {
+  display: none;
+}
+.dashboard-card {
+  min-width: 260px;
+  max-width: 350px;
+  width: 90vw;
+  flex: 0 0 auto;
+}
+@media (min-width: 768px) {
+  .dashboard-cards-row-mobile {
+    overflow-x: unset !important;
+    justify-content: center !important;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+  .dashboard-card {
+    min-width: 260px;
+    max-width: 350px;
+    width: 100%;
+    flex: 0 1 320px;
+  }
+}
+.dashboard-cards-row {
+  display: none !important;
 }
