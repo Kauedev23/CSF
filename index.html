@@ -129,9 +129,22 @@
         <p class="text-center text-blue-900">Seja bem-vindo(a)!</p>
         <h2 class="text-3xl font-bold mb-6 text-center text-blue-900 relative z-10">Login</h2>
         <form id="login-form" class="space-y-5">
-          <input type="email" id="login-email" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Email" required>
-          <input type="password" id="login-password" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Senha" required>
-          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold flex items-center justify-center gap-2"><svg class="w-5 h-5"><use href="#heroicon-o-arrow-right-circle" /></svg>Entrar</button>
+          <div class="input-group">
+            <input type="email" id="login-email" class="w-full" placeholder="Email" required>
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5H4.5a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-.659 1.591l-7.09 7.09a1.5 1.5 0 0 1-2.122 0l-7.09-7.09A2.25 2.25 0 0 1 2.25 6.993V6.75" /></svg>
+            </span>
+          </div>
+          <div class="input-group">
+            <input type="password" id="login-password" class="w-full" placeholder="Senha" required>
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.5a4.5 4.5 0 1 0-9 0v3m12 0a2.25 2.25 0 0 1 2.25 2.25v6.75A2.25 2.25 0 0 1 16.5 21h-9a2.25 2.25 0 0 1-2.25-2.25V12.75A2.25 2.25 0 0 1 7.5 10.5h9z" /></svg>
+            </span>
+          </div>
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold flex items-center justify-center gap-2">
+            <svg class="w-5 h-5"><use href="#heroicon-o-arrow-right-circle" /></svg>
+            <span>Entrar</span>
+          </button>
         <p class="text-center text-blue-900">Não consegue entrar? entre em contato com um administrador.</p>
         </form>
       </div>

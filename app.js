@@ -770,7 +770,7 @@ function renderRelatorioTabela(relatorio) {
       <td class="px-4 py-2 text-center">${item.quantidade_minima}</td>
       <td class="px-4 py-2 text-center">${item.unidade}</td>
       <td class="px-4 py-2 text-left">${item.fornecedor}</td>
-      <td class="px-4 py-2 text-center font-bold text-green-700">${item.sugestao_compra}</td>
+      <td class="px-4 py-2 text-center font-bold text-green-700"><span class='badge-sugestao'>${item.sugestao_compra}</span></td>
     </tr>`;
   });
   html += '</tbody></table>';
@@ -830,6 +830,8 @@ if (relatorioSection) {
 let historicoCache = [];
 let nomesItensCache = {};
 let nomesUsuariosCache = {};
+let todosFornecedores = [];
+let todosItens = [];
 
 // Função para aplicar filtros ao histórico
 function filtrarHistorico() {
@@ -838,7 +840,7 @@ function filtrarHistorico() {
   const inicio = document.getElementById('filtro-inicio-historico').value;
   const fim = document.getElementById('filtro-fim-historico').value;
   const fornecedor = document.getElementById('filtro-fornecedor-historico').value.trim().toLowerCase();
-  const item = document.getElementById('filtro-item-historico').value.trim().toLowerCase();
+  const itemNome = document.getElementById('filtro-item-historico').value.trim();
 
   historico = historico.filter(h => {
     let ok = true;
@@ -864,10 +866,10 @@ function filtrarHistorico() {
     if (fornecedor) {
       ok = ok && (h.fornecedor && h.fornecedor.toLowerCase().includes(fornecedor));
     }
-    // Filtro por item
-    if (item) {
-      const nomeItem = nomesItensCache[h.item_id] ? nomesItensCache[h.item_id].toLowerCase() : '';
-      ok = ok && nomeItem.includes(item);
+    // Filtro por item (agora compara pelo ID)
+    if (itemNome) {
+      const itemObj = todosItens.find(i => i.nome === itemNome);
+      ok = ok && h.item_id == (itemObj ? itemObj.id : null);
     }
     return ok;
   });
@@ -884,15 +886,29 @@ function limparFiltrosHistorico() {
   renderHistoricoTabela(historicoCache, nomesItensCache, nomesUsuariosCache);
 }
 
-// Adicionar listeners aos botões de filtro
-window.addEventListener('DOMContentLoaded', () => {
-  const btnFiltrar = document.getElementById('btn-aplicar-filtros-historico');
-  const btnLimpar = document.getElementById('btn-limpar-filtros-historico');
-  if (btnFiltrar) btnFiltrar.addEventListener('click', filtrarHistorico);
-  if (btnLimpar) btnLimpar.addEventListener('click', limparFiltrosHistorico);
-});
+// Preencher selects de filtro com todos os fornecedores e itens cadastrados
+async function preencherSelectsHistorico() {
+  // Buscar todos os itens
+  const { data: itens } = await supabase.from('itens').select('id, nome, fornecedor');
+  todosItens = itens ? itens.map(i => ({ id: i.id, nome: i.nome })) : [];
+  // Fornecedores únicos
+  todosFornecedores = [...new Set((itens || []).map(i => i.fornecedor).filter(f => f && f.trim() !== ''))];
 
-// Modificar loadHistorico para salvar cache
+  // Preencher select de fornecedores
+  const selectFornecedor = document.getElementById('filtro-fornecedor-historico');
+  if (selectFornecedor) {
+    selectFornecedor.innerHTML = '<option value="">Todos</option>' +
+      todosFornecedores.map(f => `<option value="${f}">${f}</option>`).join('');
+  }
+  // Preencher select de itens
+  const selectItem = document.getElementById('filtro-item-historico');
+  if (selectItem) {
+    selectItem.innerHTML = '<option value="">Todos</option>' +
+      todosItens.map(i => `<option value="${i.nome}">${i.nome}</option>`).join('');
+  }
+}
+
+// Modificar loadHistorico para salvar cache e preencher selects
 async function loadHistorico() {
   // Buscar histórico, itens e usuários
   const { data: historico, error } = await supabase.from('historico').select('*').order('data', { ascending: false });
@@ -915,6 +931,7 @@ async function loadHistorico() {
     const { data: perfis } = await supabase.from('profiles').select('id, nome').in('id', usuarioIds);
     perfis.forEach(u => { nomesUsuariosCache[u.id] = u.nome; });
   }
+  await preencherSelectsHistorico();
   renderHistoricoTabela(historico, nomesItensCache, nomesUsuariosCache);
 }
 
@@ -1256,4 +1273,15 @@ function renderDashboardCards(critico = 0, baixo = 0) {
   }
   const skeletonGrid = dashboardSection.querySelector('.grid, .dashboard-cards-row-mobile');
   if (skeletonGrid) skeletonGrid.outerHTML = html;
+}
+
+// Adicionar event listener para o botão de filtro do histórico
+const btnFiltrarHistorico = document.getElementById('btn-aplicar-filtros-historico');
+if (btnFiltrarHistorico) {
+  btnFiltrarHistorico.addEventListener('click', filtrarHistorico);
+}
+// Adicionar event listener para o botão de limpar filtros do histórico
+const btnLimparFiltrosHistorico = document.getElementById('btn-limpar-filtros-historico');
+if (btnLimparFiltrosHistorico) {
+  btnLimparFiltrosHistorico.addEventListener('click', limparFiltrosHistorico);
 }
