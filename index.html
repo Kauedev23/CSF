@@ -213,7 +213,11 @@
         <div id="estoque-cards" class="mobile-only"></div>
       </section>
       <section id="form-item-section" class="hidden mb-10">
-        <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-plus-circle" /></svg>Adicionar Item</h2>
+        <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2" id="form-item-title-wrapper">
+          <svg id="form-item-title-icon" class="w-6 h-6"><use href="#heroicon-o-plus-circle" /></svg>
+          <span id="form-item-title">Adicionar Item</span>
+          <span id="form-item-badge" class="ml-2 px-2 py-1 rounded bg-yellow-400 text-yellow-900 font-semibold text-sm hidden">Edição</span>
+        </h2>
         <form id="form-item" class="bg-white p-6 rounded-xl shadow space-y-5 max-w-lg mx-auto">
           <input type="hidden" id="item-id">
           <div>

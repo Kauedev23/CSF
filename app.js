@@ -99,9 +99,51 @@ window.addEventListener('DOMContentLoaded', () => {
 // ...
 
 // ===============================
+// Função para animar contadores dos cards do dashboard
+// ===============================
+function animateCounter(element, to) {
+  if (!element) return;
+  const from = parseInt(element.textContent.replace(/\D/g, '')) || 0;
+  const duration = 800;
+  const start = performance.now();
+  function update(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const value = Math.floor(from + (to - from) * progress);
+    element.textContent = value;
+    if (progress < 1) requestAnimationFrame(update);
+    else element.textContent = to;
+  }
+  requestAnimationFrame(update);
+}
+
+// ===============================
+// Função para exibir skeleton loading nos cards do dashboard
+// ===============================
+function showDashboardSkeleton() {
+  const dashboardSection = document.getElementById('dashboard');
+  if (!dashboardSection) return;
+  const skeletons = [
+    { color: 'bg-blue-100' },
+    { color: 'bg-yellow-100' },
+    { color: 'bg-red-100' },
+    { color: 'bg-green-100' }
+  ];
+  const html = `<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    ${skeletons.map(s => `
+      <div class="${s.color} skeleton-card p-6 rounded-xl shadow flex flex-col items-center">
+        <div class="skeleton-bar"></div>
+        <div class="skeleton-label"></div>
+      </div>
+    `).join('')}
+  </div>`;
+  dashboardSection.querySelector('.grid').outerHTML = html;
+}
+
+// ===============================
 // Função para carregar o Dashboard
 // ===============================
 async function loadDashboard() {
+  showDashboardSkeleton();
   // Buscar todos os itens
   const { data: itens, error } = await supabase.from('itens').select('*');
   if (error) {
@@ -132,11 +174,13 @@ async function loadDashboard() {
     consumoMensal = historico.reduce((soma, h) => soma + h.quantidade, 0);
   }
 
-  // Atualizar cards
-  document.getElementById('stat-total-itens').textContent = totalItens;
-  document.getElementById('stat-baixo').textContent = baixo;
-  document.getElementById('stat-critico').textContent = critico;
-  document.getElementById('stat-consumo-mensal').textContent = consumoMensal;
+  // Restaurar cards reais antes de animar, passando os valores de critico e baixo
+  renderDashboardCards(critico, baixo);
+  // Atualizar cards com animação
+  animateCounter(document.getElementById('stat-total-itens'), totalItens);
+  animateCounter(document.getElementById('stat-baixo'), baixo);
+  animateCounter(document.getElementById('stat-critico'), critico);
+  animateCounter(document.getElementById('stat-consumo-mensal'), consumoMensal);
 
   // Gráfico de barras: itens mais consumidos
   let dadosBar = {};
@@ -186,7 +230,15 @@ function renderBarChart(labels, data) {
     },
     options: {
       responsive: true,
-      plugins: { legend: { display: false } }
+      plugins: {
+        tooltip: {
+          callbacks: {
+            title: (ctx) => ctx[0].label,
+            label: (ctx) => `Total consumido: ${ctx.parsed.y}`,
+            afterBody: (ctx) => 'Clique para filtrar por este item.'
+          }
+        }
+      }
     }
   });
 }
@@ -206,7 +258,14 @@ function renderPieChart(labels, data, colors) {
     },
     options: {
       responsive: true,
-      plugins: { legend: { position: 'bottom' } }
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: ${ctx.parsed} itens`,
+            afterBody: (ctx) => 'Status do estoque.'
+          }
+        }
+      }
     }
   });
 }
@@ -367,8 +426,12 @@ if (addItemBtn) {
 function abrirFormItem(item = null) {
   formItemSection.classList.remove('hidden');
   document.getElementById('estoque').classList.add('hidden');
+  const titleIcon = document.getElementById('form-item-title-icon');
+  const badge = document.getElementById('form-item-badge');
   if (item) {
     formItemTitle.textContent = 'Editar Item';
+    if (titleIcon) titleIcon.innerHTML = '<use href="#heroicon-o-pencil-square" />';
+    if (badge) badge.classList.remove('hidden');
     formItem['item-id'].value = item.id;
     formItem['item-nome'].value = item.nome;
     formItem['item-quantidade'].value = item.quantidade;
@@ -378,9 +441,15 @@ function abrirFormItem(item = null) {
     editandoItemId = item.id;
   } else {
     formItemTitle.textContent = 'Adicionar Item';
+    if (titleIcon) titleIcon.innerHTML = '<use href="#heroicon-o-plus-circle" />';
+    if (badge) badge.classList.add('hidden');
     formItem.reset();
     editandoItemId = null;
   }
+  setTimeout(() => {
+    const nomeInput = document.getElementById('item-nome');
+    if (nomeInput) nomeInput.focus();
+  }, 100);
 }
 
 if (cancelarItemBtn) {
@@ -1058,3 +1127,35 @@ if (toggleDarkmodeBtn) {
 }
 // Restaurar preferência ao carregar
 if (localStorage.getItem('darkmode') === '1') setDarkMode(true);
+
+// Função para restaurar os cards reais do dashboard
+function renderDashboardCards(critico = 0, baixo = 0) {
+  const dashboardSection = document.getElementById('dashboard');
+  if (!dashboardSection) return;
+  const html = `<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 flex-nowrap overflow-x-auto dashboard-cards-row">
+    <div class="bg-blue-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in" title="Quantidade total de produtos cadastrados no estoque.">
+      <svg class="w-8 h-8 text-blue-600 mb-2"><use href="#heroicon-o-cube" /></svg>
+      <div class="text-4xl font-extrabold text-blue-800 mb-1" id="stat-total-itens">0</div>
+      <div class="text-2xl font-bold text-blue-700">Total de Itens</div>
+    </div>
+    <div class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos abaixo do estoque mínimo.">
+      ${(baixo > 0) ? `<span class='dashboard-badge baixo'>Baixo!</span>` : ''}
+      <svg class="w-8 h-8 text-yellow-500 mb-2"><use href="#heroicon-o-exclamation-triangle" /></svg>
+      <div class="text-4xl font-extrabold text-yellow-700 mb-1" id="stat-baixo">0</div>
+      <div class="text-2xl font-bold text-yellow-700">Estoque Baixo</div>
+    </div>
+    <div class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos com estoque crítico (zerado).">
+      ${(critico > 0) ? `<span class='dashboard-badge critico'>Crítico!</span>` : ''}
+      <svg class="w-8 h-8 text-red-500 mb-2"><use href="#heroicon-o-x-circle" /></svg>
+      <div class="text-4xl font-extrabold text-red-700 mb-1" id="stat-critico">0</div>
+      <div class="text-2xl font-bold text-red-700">Crítico</div>
+    </div>
+    <div class="bg-green-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in" title="Total de itens consumidos neste mês.">
+      <svg class="w-8 h-8 text-green-600 mb-2"><use href="#heroicon-o-chart-bar" /></svg>
+      <div class="text-4xl font-extrabold text-green-700 mb-1" id="stat-consumo-mensal">0</div>
+      <div class="text-2xl font-bold text-green-700">Consumo Mensal</div>
+    </div>
+  </div>`;
+  const skeletonGrid = dashboardSection.querySelector('.grid');
+  if (skeletonGrid) skeletonGrid.outerHTML = html;
+}
