@@ -126,11 +126,13 @@
         <source src="1729711549391.mp4" type="video/mp4">
       </video>
       <div class="bg-white bg-opacity-90 p-8 rounded-xl shadow-lg max-w-sm w-full mx-4 relative z-10">
+        <p class="text-center text-blue-900">Seja bem-vindo(a)!</p>
         <h2 class="text-3xl font-bold mb-6 text-center text-blue-900 relative z-10">Login</h2>
         <form id="login-form" class="space-y-5">
           <input type="email" id="login-email" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Email" required>
           <input type="password" id="login-password" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Senha" required>
           <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold flex items-center justify-center gap-2"><svg class="w-5 h-5"><use href="#heroicon-o-arrow-right-circle" /></svg>Entrar</button>
+        <p class="text-center text-blue-900">Não consegue entrar? entre em contato com um administrador.</p>
         </form>
       </div>
     </div>
@@ -283,6 +285,44 @@
       </section>
       <section id="historico" class="mb-10">
         <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-clock" /></svg>Histórico de Transações</h2>
+        <div class="mb-4" id="filtros-historico">
+          <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 flex flex-col gap-2 md:flex-row md:items-end md:gap-4">
+            <div class="flex flex-col w-full md:w-auto">
+              <label class="font-semibold mb-1">Mês:</label>
+              <input type="month" id="filtro-mes-historico" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 w-full">
+            </div>
+            <div class="flex flex-col w-full md:w-auto">
+              <label class="font-semibold mb-1">Período:</label>
+              <div class="flex gap-2">
+                <input type="date" id="filtro-inicio-historico" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 w-full">
+                <span class="self-center">a</span>
+                <input type="date" id="filtro-fim-historico" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 w-full">
+              </div>
+            </div>
+            <div class="flex flex-col w-full md:w-auto">
+              <label class="font-semibold mb-1">Fornecedor:</label>
+              <select id="filtro-fornecedor-historico" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 w-full">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div class="flex flex-col w-full md:w-auto">
+              <label class="font-semibold mb-1">Item:</label>
+              <select id="filtro-item-historico" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 w-full">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+              <button id="btn-aplicar-filtros-historico" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold w-full md:w-auto">Filtrar</button>
+              <button id="btn-limpar-filtros-historico" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold w-full md:w-auto">Limpar</button>
+              <button id="btn-exportar-excel-historico" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold w-full md:w-auto flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Exportar Excel
+              </button>
+            </div>
+          </div>
+        </div>
         <div id="historico-tabela" class="w-full overflow-x-auto">
           <table class="table-auto w-full">
             <thead>

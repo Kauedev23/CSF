@@ -647,7 +647,13 @@ consumirItemSelect.addEventListener('change', function() {
 if (cancelarConsumirBtn) {
   cancelarConsumirBtn.addEventListener('click', () => {
     formConsumirSection.classList.add('hidden');
-    document.getElementById('estoque').classList.remove('hidden');
+    // Corrigir: para operacional, volta para dashboard; para admin, volta para estoque
+    const role = userRoleSpan.textContent.toLowerCase();
+    if (role === 'operacional') {
+      showSection('dashboard');
+    } else {
+      document.getElementById('estoque').classList.remove('hidden');
+    }
   });
 }
 
@@ -826,6 +832,72 @@ if (relatorioSection) {
 // ===============================
 // Histórico de Transações
 // ===============================
+// Filtros do histórico
+let historicoCache = [];
+let nomesItensCache = {};
+let nomesUsuariosCache = {};
+
+// Função para aplicar filtros ao histórico
+function filtrarHistorico() {
+  let historico = historicoCache;
+  const mes = document.getElementById('filtro-mes-historico').value;
+  const inicio = document.getElementById('filtro-inicio-historico').value;
+  const fim = document.getElementById('filtro-fim-historico').value;
+  const fornecedor = document.getElementById('filtro-fornecedor-historico').value.trim().toLowerCase();
+  const itemId = document.getElementById('filtro-item-historico').value;
+
+  historico = historico.filter(h => {
+    let ok = true;
+    // Filtro por mês
+    if (mes) {
+      const data = new Date(h.data);
+      const mesFiltro = mes.split('-');
+      ok = ok && (data.getFullYear() === parseInt(mesFiltro[0]) && (data.getMonth() + 1) === parseInt(mesFiltro[1]));
+    }
+    // Filtro por período
+    if (inicio) {
+      const dataInicio = new Date(inicio + 'T00:00:00');
+      const dataRegistro = new Date(h.data);
+      ok = ok && (dataRegistro >= dataInicio);
+    }
+    if (fim) {
+      // Garante que o dia final inclua até 23:59:59
+      const dataFim = new Date(fim + 'T23:59:59.999');
+      const dataRegistro = new Date(h.data);
+      ok = ok && (dataRegistro <= dataFim);
+    }
+    // Filtro por fornecedor
+    if (fornecedor) {
+      ok = ok && (h.fornecedor && h.fornecedor.toLowerCase() === fornecedor);
+    }
+    // Filtro por item
+    if (itemId) {
+      ok = ok && (h.item_id == itemId);
+    }
+    return ok;
+  });
+  renderHistoricoTabela(historico, nomesItensCache, nomesUsuariosCache);
+}
+
+// Função para limpar filtros
+function limparFiltrosHistorico() {
+  document.getElementById('filtro-mes-historico').value = '';
+  document.getElementById('filtro-inicio-historico').value = '';
+  document.getElementById('filtro-fim-historico').value = '';
+  document.getElementById('filtro-fornecedor-historico').value = '';
+  document.getElementById('filtro-item-historico').value = '';
+  renderHistoricoTabela(historicoCache, nomesItensCache, nomesUsuariosCache);
+}
+
+// Adicionar listeners aos botões de filtro
+window.addEventListener('DOMContentLoaded', () => {
+  const btnFiltrar = document.getElementById('btn-aplicar-filtros-historico');
+  const btnLimpar = document.getElementById('btn-limpar-filtros-historico');
+  if (btnFiltrar) btnFiltrar.addEventListener('click', filtrarHistorico);
+  if (btnLimpar) btnLimpar.addEventListener('click', limparFiltrosHistorico);
+});
+
+// Modificar loadHistorico para salvar cache
 async function loadHistorico() {
   // Buscar histórico, itens e usuários
   const { data: historico, error } = await supabase.from('historico').select('*').order('data', { ascending: false });
@@ -833,21 +905,24 @@ async function loadHistorico() {
     showToast('Erro ao carregar histórico: ' + error.message, 'error');
     return;
   }
+  historicoCache = historico;
   // Buscar nomes dos itens
   const itemIds = [...new Set(historico.map(h => h.item_id))];
-  let nomesItens = {};
+  nomesItensCache = {};
   if (itemIds.length > 0) {
     const { data: itens } = await supabase.from('itens').select('id, nome').in('id', itemIds);
-    itens.forEach(i => { nomesItens[i.id] = i.nome; });
+    itens.forEach(i => { nomesItensCache[i.id] = i.nome; });
   }
   // Buscar nomes dos usuários
   const usuarioIds = [...new Set(historico.map(h => h.usuario_id).filter(Boolean))];
-  let nomesUsuarios = {};
+  nomesUsuariosCache = {};
   if (usuarioIds.length > 0) {
     const { data: perfis } = await supabase.from('profiles').select('id, nome').in('id', usuarioIds);
-    perfis.forEach(u => { nomesUsuarios[u.id] = u.nome; });
+    perfis.forEach(u => { nomesUsuariosCache[u.id] = u.nome; });
   }
-  renderHistoricoTabela(historico, nomesItens, nomesUsuarios);
+  renderHistoricoTabela(historico, nomesItensCache, nomesUsuariosCache);
+  preencherSelectFornecedores();
+  preencherSelectItens();
 }
 
 function renderHistoricoTabela(historico, nomesItens, nomesUsuarios) {
@@ -1159,3 +1234,95 @@ function renderDashboardCards(critico = 0, baixo = 0) {
   const skeletonGrid = dashboardSection.querySelector('.grid');
   if (skeletonGrid) skeletonGrid.outerHTML = html;
 }
+
+// Preencher select de fornecedores únicos
+function preencherSelectFornecedores() {
+  const select = document.getElementById('filtro-fornecedor-historico');
+  if (!select) return;
+  // Limpa opções exceto a primeira
+  select.innerHTML = '<option value="">Todos</option>';
+  // Coleta fornecedores únicos do histórico
+  const fornecedores = [...new Set(historicoCache.map(h => h.fornecedor).filter(f => f && f.trim() !== ''))];
+  fornecedores.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f;
+    opt.textContent = f;
+    select.appendChild(opt);
+  });
+}
+
+// Preencher select de itens únicos
+function preencherSelectItens() {
+  const select = document.getElementById('filtro-item-historico');
+  if (!select) return;
+  select.innerHTML = '<option value="">Todos</option>';
+  // Coleta ids únicos do histórico
+  const itemIds = [...new Set(historicoCache.map(h => h.item_id).filter(i => i))];
+  itemIds.forEach(id => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = nomesItensCache[id] || id;
+    select.appendChild(opt);
+  });
+}
+
+// Função para exportar histórico filtrado para Excel
+function exportarHistoricoParaExcel() {
+  // Pega os dados atualmente exibidos (após filtro)
+  let historico = historicoCache;
+  const mes = document.getElementById('filtro-mes-historico').value;
+  const inicio = document.getElementById('filtro-inicio-historico').value;
+  const fim = document.getElementById('filtro-fim-historico').value;
+  const fornecedor = document.getElementById('filtro-fornecedor-historico').value.trim().toLowerCase();
+  const itemId = document.getElementById('filtro-item-historico').value;
+
+  historico = historico.filter(h => {
+    let ok = true;
+    if (mes) {
+      const data = new Date(h.data);
+      const mesFiltro = mes.split('-');
+      ok = ok && (data.getFullYear() === parseInt(mesFiltro[0]) && (data.getMonth() + 1) === parseInt(mesFiltro[1]));
+    }
+    if (inicio) {
+      const dataInicio = new Date(inicio + 'T00:00:00');
+      const dataRegistro = new Date(h.data);
+      ok = ok && (dataRegistro >= dataInicio);
+    }
+    if (fim) {
+      const dataFim = new Date(fim + 'T23:59:59.999');
+      const dataRegistro = new Date(h.data);
+      ok = ok && (dataRegistro <= dataFim);
+    }
+    if (fornecedor) {
+      ok = ok && (h.fornecedor && h.fornecedor.toLowerCase() === fornecedor);
+    }
+    if (itemId) {
+      ok = ok && (h.item_id == itemId);
+    }
+    return ok;
+  });
+
+  // Monta os dados para exportação
+  const dadosExport = historico.map(h => ({
+    'Data': new Date(h.data).toLocaleString('pt-BR'),
+    'Item': nomesItensCache[h.item_id] || h.item_id || '-',
+    'Tipo': h.tipo === 'entrada' ? 'Entrada' : h.tipo === 'saida' ? 'Saída' : h.tipo === 'exclusao' ? 'Exclusão' : h.tipo,
+    'Quantidade': h.quantidade,
+    'Usuário': nomesUsuariosCache[h.usuario_id] || h.usuario_id || '-',
+    'Fornecedor': h.fornecedor || '-',
+    'Unidade': h.unidade || '-',
+    'Detalhes': h.detalhes || ''
+  }));
+
+  // Cria a planilha e exporta
+  const ws = XLSX.utils.json_to_sheet(dadosExport);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Histórico');
+  XLSX.writeFile(wb, 'historico_transacoes.xlsx');
+}
+
+// Listener para o botão de exportar
+window.addEventListener('DOMContentLoaded', () => {
+  const btnExportar = document.getElementById('btn-exportar-excel-historico');
+  if (btnExportar) btnExportar.addEventListener('click', exportarHistoricoParaExcel);
+});
