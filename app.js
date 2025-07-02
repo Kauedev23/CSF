@@ -1285,3 +1285,62 @@ const btnLimparFiltrosHistorico = document.getElementById('btn-limpar-filtros-hi
 if (btnLimparFiltrosHistorico) {
   btnLimparFiltrosHistorico.addEventListener('click', limparFiltrosHistorico);
 }
+
+// Adicionar event listener para exportar histórico para Excel
+const btnExportarExcelHistorico = document.getElementById('btn-exportar-excel-historico');
+if (btnExportarExcelHistorico) {
+  btnExportarExcelHistorico.addEventListener('click', () => {
+    // Montar dados do histórico filtrado
+    let historico = historicoCache;
+    const mes = document.getElementById('filtro-mes-historico').value;
+    const inicio = document.getElementById('filtro-inicio-historico').value;
+    const fim = document.getElementById('filtro-fim-historico').value;
+    const fornecedor = document.getElementById('filtro-fornecedor-historico').value.trim().toLowerCase();
+    const itemNome = document.getElementById('filtro-item-historico').value.trim();
+    historico = historico.filter(h => {
+      let ok = true;
+      if (mes) {
+        const data = new Date(h.data);
+        const mesFiltro = mes.split('-');
+        ok = ok && (data.getFullYear() === parseInt(mesFiltro[0]) && (data.getMonth() + 1) === parseInt(mesFiltro[1]));
+      }
+      if (inicio) {
+        const dataInicio = new Date(inicio + 'T00:00:00');
+        const dataRegistro = new Date(h.data);
+        ok = ok && (dataRegistro >= dataInicio);
+      }
+      if (fim) {
+        const dataFim = new Date(fim + 'T23:59:59.999');
+        const dataRegistro = new Date(h.data);
+        ok = ok && (dataRegistro <= dataFim);
+      }
+      if (fornecedor) {
+        ok = ok && (h.fornecedor && h.fornecedor.toLowerCase().includes(fornecedor));
+      }
+      if (itemNome) {
+        const itemObj = todosItens.find(i => i.nome === itemNome);
+        ok = ok && h.item_id == (itemObj ? itemObj.id : null);
+      }
+      return ok;
+    });
+    if (!historico || historico.length === 0) {
+      showToast('Nenhum registro para exportar.', 'error');
+      return;
+    }
+    // Montar dados para exportação
+    const dados = historico.map(h => ({
+      'Data': new Date(h.data).toLocaleString('pt-BR'),
+      'Item': nomesItensCache[h.item_id] || h.item_id || '-',
+      'Tipo': h.tipo,
+      'Quantidade': h.quantidade,
+      'Usuário': nomesUsuariosCache[h.usuario_id] || h.usuario_id || '-',
+      'Fornecedor': h.fornecedor || '-',
+      'Unidade': h.unidade || '-',
+      'Detalhes': h.detalhes || ''
+    }));
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Histórico');
+    XLSX.writeFile(wb, 'historico_estoque.xlsx');
+  });
+}
