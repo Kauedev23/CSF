@@ -824,6 +824,10 @@ menuBtns.forEach(btn => {
       return;
     }
     showSection(btn.dataset.section);
+    // Fechar drawer se estiver aberto
+    if (drawerMenu && !drawerMenu.classList.contains('-translate-x-full')) {
+      closeDrawer();
+    }
   });
 });
 
@@ -901,3 +905,11 @@ const consumirSection = document.getElementById('form-consumir-section');
 if (consumirSection) {
   consumirSection.addEventListener('show', abrirFormConsumir);
 }
+
+// Fechar drawer ao selecionar uma aba
+const drawerBtns = drawerMenu.querySelectorAll('.menu-btn');
+drawerBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    closeDrawer();
+  });
+});

@@ -15,8 +15,8 @@
         <img src="logo.png" alt="Logo CSF" class="w-8 h-8 object-contain" />
         <span class="text-2xl font-bold text-blue-900"></span>
       </div>
-      <button id="menu-toggle" class="flex items-center px-2 py-1 border rounded text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Abrir menu">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-blue-700">
+      <button id="menu-toggle" class="flex items-center px-2 py-1 border rounded text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 md:hidden z-50" aria-label="Abrir menu">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-blue-900">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
       </button>
@@ -122,7 +122,7 @@
         <source src="1729711549391.mp4" type="video/mp4">
       </video>
       <div class="bg-white bg-opacity-90 p-8 rounded-xl shadow-lg max-w-sm w-full mx-4 relative z-10">
-        <h2 class="text-3xl font-bold mb-6 text-center text-blue-700">Login</h2>
+        <h2 class="text-3xl font-bold mb-6 text-center text-blue-900 relative z-10">Login</h2>
         <form id="login-form" class="space-y-5">
           <input type="email" id="login-email" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Email" required>
           <input type="password" id="login-password" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Senha" required>
@@ -170,7 +170,7 @@
       </section>
       <section id="estoque" class="mb-10">
         <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-2">
-          <h2 class="text-2xl font-bold text-blue-700 flex items-center gap-2 md:justify-start justify-center w-full"><svg class="w-6 h-6"><use href="#heroicon-o-archive-box" /></svg>Estoque</h2>
+          <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-archive-box" /></svg>Estoque</h2>
           <div class="flex flex-wrap gap-2 md:justify-end justify-center w-full">
             <input type="text" id="filtro-nome" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Filtrar por nome">
             <select id="filtro-status" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -186,7 +186,7 @@
         <div id="estoque-cards" class="mobile-only"></div>
       </section>
       <section id="form-item-section" class="hidden mb-10">
-        <h2 class="text-2xl font-bold mb-4 text-blue-700 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-plus-circle" /></svg><span id="form-item-title">Adicionar Item</span></h2>
+        <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-plus-circle" /></svg>Adicionar Item</h2>
         <form id="form-item" class="bg-white p-6 rounded-xl shadow space-y-5 max-w-lg mx-auto">
           <input type="hidden" id="item-id">
           <div>
@@ -216,7 +216,7 @@
         </form>
       </section>
       <section id="form-consumir-section" class="hidden mb-10">
-        <h2 class="text-2xl font-bold mb-4 text-blue-700 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-arrow-down-circle" /></svg>Consumir Item</h2>
+        <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-arrow-down-circle" /></svg>Consumir Item</h2>
         <form id="form-consumir" class="bg-white p-6 rounded-xl shadow space-y-5 max-w-lg mx-auto">
           <div>
             <label for="consumir-item-select" class="block mb-1 font-semibold">Item</label>
@@ -234,7 +234,7 @@
       </section>
       <section id="relatorio-baixo" class="mb-10">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-blue-700 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-document-chart-bar" /></svg>Relatório de Estoque Baixo</h2>
+          <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-document-chart-bar" /></svg>Relatório de Estoque Baixo</h2>
           <button id="exportar-excel-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -245,7 +245,7 @@
         <div id="relatorio-tabela"></div>
       </section>
       <section id="historico" class="mb-10">
-        <h2 class="text-2xl font-bold mb-4 text-blue-700 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-clock" /></svg>Histórico de Transações</h2>
+        <h2 class="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-clock" /></svg>Histórico de Transações</h2>
         <div id="historico-tabela" class="w-full overflow-x-auto"></div>
       </section>
     </div>
