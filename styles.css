@@ -61,10 +61,17 @@ table tr:hover { background: #e0e7ff; transition: background 0.2s; }
 table th { background: #f1f5f9; font-weight: 600; }
 
 /* Menu ativo */
-.menu-btn.active, .menu-btn:focus {
-  background: #2563eb;
+.menu-btn.active,
+.menu-btn.active:hover,
+.menu-btn.active:focus {
+  background: #2563eb !important;
   color: #fff !important;
   box-shadow: 0 2px 8px #2563eb22;
+}
+.menu-btn:hover:not(.active),
+.menu-btn:focus:not(.active) {
+  background: #3b82f6;
+  color: #fff !important;
 }
 .menu-btn svg { transition: color 0.2s; }
 .menu-btn.active svg, .menu-btn:focus svg { color: #fff; }
@@ -111,4 +118,39 @@ thead th {
   padding-bottom: 0.75rem;
   font-size: 1.15rem;
   font-weight: 600;
+}
+
+#drawer-menu {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  min-width: 240px;
+  max-width: 320px;
+  width: 80vw;
+  background: #fff !important;
+  z-index: 1001 !important;
+  overflow-y: auto;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#main-menu {
+  display: none;
+}
+@media (min-width: 768px) {
+  #main-menu { display: flex !important; }
+  #drawer-menu, #drawer-backdrop { display: none !important; }
+}
+
+#drawer-backdrop {
+  display: none !important;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 1000 !important;
+}
+#drawer-backdrop.show {
+  display: block !important;
+}
+@media (min-width: 768px) {
+  #drawer-backdrop { display: none !important; }
 }

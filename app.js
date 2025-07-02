@@ -11,15 +11,18 @@ const supabase = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const loginContainer = document.getElementById('login-container');
 const mainContainer = document.getElementById('main-container');
 const userRoleSpan = document.getElementById('user-role');
+const navBar = document.querySelector('nav');
 
 function showLogin() {
   loginContainer.classList.remove('hidden');
   mainContainer.classList.add('hidden');
+  if (navBar) navBar.classList.add('hidden');
 }
 
 function showMain(role) {
   loginContainer.classList.add('hidden');
   mainContainer.classList.remove('hidden');
+  if (navBar) navBar.classList.remove('hidden');
   userRoleSpan.textContent = role === 'admin' ? 'Administrador' : 'Operacional';
   ajustarMenuPorPerfil(role);
   showSection('dashboard');
@@ -268,9 +271,18 @@ function renderEstoqueTabela(itens) {
       <td class="px-4 py-2 text-left">${item.fornecedor}</td>
       <td class="px-4 py-2 text-center status-${status}">${statusIcon}${status.charAt(0).toUpperCase() + status.slice(1)}</td>
       <td class="px-4 py-2 text-center">
-        <button class="text-green-600 hover:underline mr-2" onclick="abrirFormConsumir(${item.id})">Consumir</button>
-        <button class="text-blue-600 hover:underline mr-2" onclick="editarItem(${item.id})">Editar</button>
-        <button class="text-red-600 hover:underline" onclick="excluirItem(${item.id})">Excluir</button>
+        <button class="text-green-600 hover:underline mr-2" onclick="abrirFormConsumir(${item.id})">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+          Consumir
+        </button>
+        <button class="text-blue-600 hover:underline mr-2" onclick="editarItem(${item.id})">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" /></svg>
+          Editar
+        </button>
+        <button class="text-red-600 hover:underline" onclick="excluirItem(${item.id})">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0\" /></svg>
+          Excluir
+        </button>
       </td>
     </tr>`;
   });
@@ -302,9 +314,18 @@ function renderEstoqueCards(itens) {
       <div class="mb-1">Mínima: <b>${item.quantidade_minima}</b></div>
       <div class="mb-1">Fornecedor: <b>${item.fornecedor}</b></div>
       <div class="flex gap-2 mt-2">
-        <button class="text-green-600 hover:underline" onclick="abrirFormConsumir(${item.id})">Consumir</button>
-        <button class="text-blue-600 hover:underline" onclick="editarItem(${item.id})">Editar</button>
-        <button class="text-red-600 hover:underline" onclick="excluirItem(${item.id})">Excluir</button>
+        <button class="text-green-600 hover:underline" onclick="abrirFormConsumir(${item.id})">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+          Consumir
+        </button>
+        <button class="text-blue-600 hover:underline" onclick="editarItem(${item.id})">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" /></svg>
+          Editar
+        </button>
+        <button class="text-red-600 hover:underline" onclick="excluirItem(${item.id})">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0\" /></svg>
+          Excluir
+        </button>
       </div>
     </div>`;
   });
@@ -382,6 +403,38 @@ formItem.addEventListener('submit', async (e) => {
   if (quantidade < 0 || minima < 0) {
     showToast('Quantidade e mínima devem ser maiores ou iguais a zero.', 'error');
     return;
+  }
+  // Verificar nome duplicado
+  const { data: itensExistentes, error: erroBusca } = await supabase.from('itens').select('id, nome, quantidade');
+  if (erroBusca) {
+    showToast('Erro ao verificar nomes duplicados: ' + erroBusca.message, 'error');
+    return;
+  }
+  const nomeLower = nome.toLowerCase();
+  const itemDuplicado = itensExistentes.find(item => item.nome.toLowerCase() === nomeLower);
+  if (!editandoItemId && itemDuplicado) {
+    // Se for adição e já existe, somar quantidade
+    const novaQuantidade = (parseInt(itemDuplicado.quantidade, 10) || 0) + quantidade;
+    const { error: erroUpdate } = await supabase
+      .from('itens')
+      .update({ quantidade: novaQuantidade })
+      .eq('id', itemDuplicado.id);
+    if (erroUpdate) {
+      showToast('Erro ao atualizar quantidade do item existente: ' + erroUpdate.message, 'error');
+      return;
+    }
+    showToast('Quantidade somada ao item já existente!', 'success');
+    formItemSection.classList.add('hidden');
+    document.getElementById('estoque').classList.remove('hidden');
+    loadEstoque();
+    return;
+  } else if (editandoItemId) {
+    // Se for edição, não permitir nome duplicado em outro item
+    const duplicado = itensExistentes.some(item => item.nome.toLowerCase() === nomeLower && item.id !== editandoItemId);
+    if (duplicado) {
+      showToast('Já existe um produto com esse nome.', 'error');
+      return;
+    }
   }
   // Inserir ou atualizar
   if (editandoItemId) {
@@ -778,6 +831,7 @@ menuBtns.forEach(btn => {
 function showMain(role) {
   loginContainer.classList.add('hidden');
   mainContainer.classList.remove('hidden');
+  if (navBar) navBar.classList.remove('hidden');
   userRoleSpan.textContent = role === 'admin' ? 'Administrador' : 'Operacional';
   ajustarMenuPorPerfil(role);
   showSection('dashboard');
@@ -803,3 +857,46 @@ function showToast(msg, type = 'success') {
 // ===============================
 // Substitua SUPABASE_URL e SUPABASE_KEY pelos valores do seu projeto.
 // Implemente as funções de carregamento e manipulação conforme o schema do seu Supabase.
+
+// ===============================
+// Menu hambúrguer responsivo (drawer)
+// ===============================
+const menuToggle = document.getElementById('menu-toggle');
+const drawerMenu = document.getElementById('drawer-menu');
+const drawerBackdrop = document.getElementById('drawer-backdrop');
+const drawerClose = document.getElementById('drawer-close');
+const mainMenu = document.getElementById('main-menu');
+
+function openDrawer() {
+  drawerMenu.classList.remove('-translate-x-full');
+  drawerBackdrop.classList.add('show');
+}
+function closeDrawer() {
+  drawerMenu.classList.add('-translate-x-full');
+  setTimeout(() => {
+    drawerBackdrop.classList.remove('show');
+  }, 200);
+}
+if (menuToggle) menuToggle.addEventListener('click', openDrawer);
+if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+if (drawerBackdrop) drawerBackdrop.addEventListener('click', closeDrawer);
+// Fechar drawer ao selecionar uma aba
+const drawerBtns = drawerMenu.querySelectorAll('.menu-btn');
+drawerBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    closeDrawer();
+  });
+});
+// Sincronizar seleção de abas entre drawer e menu desktop
+function setActiveMenu(sectionId) {
+  document.querySelectorAll('.menu-btn').forEach(btn => {
+    if (btn.dataset.section === sectionId) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+}
+
+// Chamar abrirFormConsumir ao exibir a aba Consumir
+const consumirSection = document.getElementById('form-consumir-section');
+if (consumirSection) {
+  consumirSection.addEventListener('show', abrirFormConsumir);
+}
