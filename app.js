@@ -266,7 +266,7 @@ function renderPieChart(labels, data, colors) {
           }
         }
       }
-    }
+    },
   });
 }
 
@@ -841,35 +841,34 @@ function filtrarHistorico() {
   const fim = document.getElementById('filtro-fim-historico').value;
   const fornecedor = document.getElementById('filtro-fornecedor-historico').value.trim().toLowerCase();
   const itemNome = document.getElementById('filtro-item-historico').value.trim();
+  const tipo = document.getElementById('filtro-tipo-historico').value; // NOVO
 
   historico = historico.filter(h => {
     let ok = true;
-    // Filtro por mês
     if (mes) {
       const data = new Date(h.data);
       const mesFiltro = mes.split('-');
       ok = ok && (data.getFullYear() === parseInt(mesFiltro[0]) && (data.getMonth() + 1) === parseInt(mesFiltro[1]));
     }
-    // Filtro por período
     if (inicio) {
       const dataInicio = new Date(inicio + 'T00:00:00');
       const dataRegistro = new Date(h.data);
       ok = ok && (dataRegistro >= dataInicio);
     }
     if (fim) {
-      // Garante que o dia final inclua até 23:59:59
       const dataFim = new Date(fim + 'T23:59:59.999');
       const dataRegistro = new Date(h.data);
       ok = ok && (dataRegistro <= dataFim);
     }
-    // Filtro por fornecedor
     if (fornecedor) {
       ok = ok && (h.fornecedor && h.fornecedor.toLowerCase().includes(fornecedor));
     }
-    // Filtro por item (agora compara pelo ID)
     if (itemNome) {
       const itemObj = todosItens.find(i => i.nome === itemNome);
       ok = ok && h.item_id == (itemObj ? itemObj.id : null);
+    }
+    if (tipo) { // NOVO
+      ok = ok && h.tipo === tipo;
     }
     return ok;
   });
@@ -883,6 +882,7 @@ function limparFiltrosHistorico() {
   document.getElementById('filtro-fim-historico').value = '';
   document.getElementById('filtro-fornecedor-historico').value = '';
   document.getElementById('filtro-item-historico').value = '';
+  document.getElementById('filtro-tipo-historico').value = ''; // NOVO
   renderHistoricoTabela(historicoCache, nomesItensCache, nomesUsuariosCache);
 }
 
@@ -1299,6 +1299,31 @@ function renderDashboardCards(critico = 0, baixo = 0) {
           filtroStatus.dispatchEvent(new Event('input'));
         }
       });
+    }
+    // Card Consumo Mensal
+    const cardConsumoMensal = document.getElementById('stat-consumo-mensal');
+    if (cardConsumoMensal) {
+      const card = cardConsumoMensal.closest('.bg-green-100');
+      if (card) {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', async () => {
+          showSection('historico');
+          // Aguarda o histórico ser carregado antes de aplicar os filtros
+          await loadHistorico();
+          // Preenche o filtro de mês com o mês atual
+          const filtroMes = document.getElementById('filtro-mes-historico');
+          const filtroTipo = document.getElementById('filtro-tipo-historico');
+          if (filtroMes) {
+            const now = new Date();
+            const mes = now.toISOString().slice(0, 7); // yyyy-mm
+            filtroMes.value = mes;
+          }
+          if (filtroTipo) {
+            filtroTipo.value = 'saida';
+          }
+          filtrarHistorico(); // Aplica os filtros imediatamente
+        });
+      }
     }
   }, 0);
 }
