@@ -344,7 +344,7 @@ function renderEstoqueTabela(itens) {
           Editar
         </button>
         <button class="text-red-600 hover:underline" onclick="excluirItem(${item.id})">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0\" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
           Excluir
         </button>
       </td>
@@ -387,7 +387,7 @@ function renderEstoqueCards(itens) {
           Editar
         </button>
         <button class="text-red-600 hover:underline" onclick="excluirItem(${item.id})">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0\" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
           Excluir
         </button>
       </div>
@@ -1225,24 +1225,24 @@ function renderDashboardCards(critico = 0, baixo = 0) {
       <div class="bg-blue-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full" title="Quantidade total de produtos cadastrados no estoque.">
         <svg class="w-8 h-8 text-blue-600 mb-2"><use href="#heroicon-o-cube" /></svg>
         <div class="text-4xl font-extrabold text-blue-800 mb-1" id="stat-total-itens">0</div>
-        <div class="text-2xl font-bold text-blue-700">Total de Itens</div>
+        <div class="text-2xl font-bold text-blue-700 mb-1">Total de Itens</div>
       </div>
-      <div class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full relative" title="Quantidade de produtos abaixo do estoque mínimo.">
+      <div id="card-estoque-baixo" class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos abaixo do estoque mínimo.">
         ${(baixo > 0) ? `<span class='dashboard-badge baixo'>Baixo!</span>` : ''}
         <svg class="w-8 h-8 text-yellow-500 mb-2"><use href="#heroicon-o-exclamation-triangle" /></svg>
         <div class="text-4xl font-extrabold text-yellow-700 mb-1" id="stat-baixo">0</div>
-        <div class="text-2xl font-bold text-yellow-700">Estoque Baixo</div>
+        <div class="text-2xl font-bold text-yellow-700 mb-1">Estoque Baixo</div>
       </div>
-      <div class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full relative" title="Quantidade de produtos com estoque crítico (zerado).">
+      <div id="card-estoque-critico" class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full relative" title="Quantidade de produtos com estoque crítico (zerado).">
         ${(critico > 0) ? `<span class='dashboard-badge critico'>Crítico!</span>` : ''}
         <svg class="w-8 h-8 text-red-500 mb-2"><use href="#heroicon-o-x-circle" /></svg>
         <div class="text-4xl font-extrabold text-red-700 mb-1" id="stat-critico">0</div>
-        <div class="text-2xl font-bold text-red-700">Crítico</div>
+        <div class="text-2xl font-bold text-red-700 mb-1">Crítico</div>
       </div>
       <div class="bg-green-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in min-w-[260px] max-w-[350px] w-full" title="Total de itens consumidos neste mês.">
         <svg class="w-8 h-8 text-green-600 mb-2"><use href="#heroicon-o-chart-bar" /></svg>
         <div class="text-4xl font-extrabold text-green-700 mb-1" id="stat-consumo-mensal">0</div>
-        <div class="text-2xl font-bold text-green-700">Consumo Mensal</div>
+        <div class="text-2xl font-bold text-green-700 mb-1">Consumo Mensal</div>
       </div>
     </div>`;
   } else {
@@ -1250,29 +1250,57 @@ function renderDashboardCards(critico = 0, baixo = 0) {
       <div class="bg-blue-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in" title="Quantidade total de produtos cadastrados no estoque.">
         <svg class="w-8 h-8 text-blue-600 mb-2"><use href="#heroicon-o-cube" /></svg>
         <div class="text-4xl font-extrabold text-blue-800 mb-1" id="stat-total-itens">0</div>
-        <div class="text-2xl font-bold text-blue-700">Total de Itens</div>
+        <div class="text-2xl font-bold text-blue-700 mb-1">Total de Itens</div>
       </div>
-      <div class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos abaixo do estoque mínimo.">
+      <div id="card-estoque-baixo" class="bg-yellow-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos abaixo do estoque mínimo.">
         ${(baixo > 0) ? `<span class='dashboard-badge baixo'>Baixo!</span>` : ''}
         <svg class="w-8 h-8 text-yellow-500 mb-2"><use href="#heroicon-o-exclamation-triangle" /></svg>
         <div class="text-4xl font-extrabold text-yellow-700 mb-1" id="stat-baixo">0</div>
-        <div class="text-2xl font-bold text-yellow-700">Estoque Baixo</div>
+        <div class="text-2xl font-bold text-yellow-700 mb-1">Estoque Baixo</div>
       </div>
-      <div class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos com estoque crítico (zerado).">
+      <div id="card-estoque-critico" class="bg-red-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in relative" title="Quantidade de produtos com estoque crítico (zerado).">
         ${(critico > 0) ? `<span class='dashboard-badge critico'>Crítico!</span>` : ''}
         <svg class="w-8 h-8 text-red-500 mb-2"><use href="#heroicon-o-x-circle" /></svg>
         <div class="text-4xl font-extrabold text-red-700 mb-1" id="stat-critico">0</div>
-        <div class="text-2xl font-bold text-red-700">Crítico</div>
+        <div class="text-2xl font-bold text-red-700 mb-1">Crítico</div>
       </div>
       <div class="bg-green-100 p-6 rounded-xl shadow flex flex-col items-center dashboard-card animate-fade-in" title="Total de itens consumidos neste mês.">
         <svg class="w-8 h-8 text-green-600 mb-2"><use href="#heroicon-o-chart-bar" /></svg>
         <div class="text-4xl font-extrabold text-green-700 mb-1" id="stat-consumo-mensal">0</div>
-        <div class="text-2xl font-bold text-green-700">Consumo Mensal</div>
+        <div class="text-2xl font-bold text-green-700 mb-1">Consumo Mensal</div>
       </div>
     </div>`;
   }
   const skeletonGrid = dashboardSection.querySelector('.grid, .dashboard-cards-row-mobile');
   if (skeletonGrid) skeletonGrid.outerHTML = html;
+  setTimeout(() => {
+    // Card Estoque Baixo
+    const cardEstoqueBaixo = document.getElementById('card-estoque-baixo');
+    if (cardEstoqueBaixo) {
+      cardEstoqueBaixo.style.cursor = 'pointer';
+      cardEstoqueBaixo.addEventListener('click', () => {
+        showSection('estoque');
+        const filtroStatus = document.getElementById('filtro-status');
+        if (filtroStatus) {
+          filtroStatus.value = 'baixo';
+          filtroStatus.dispatchEvent(new Event('input'));
+        }
+      });
+    }
+    // Card Estoque Crítico
+    const cardEstoqueCritico = document.getElementById('card-estoque-critico');
+    if (cardEstoqueCritico) {
+      cardEstoqueCritico.style.cursor = 'pointer';
+      cardEstoqueCritico.addEventListener('click', () => {
+        showSection('estoque');
+        const filtroStatus = document.getElementById('filtro-status');
+        if (filtroStatus) {
+          filtroStatus.value = 'critico';
+          filtroStatus.dispatchEvent(new Event('input'));
+        }
+      });
+    }
+  }, 0);
 }
 
 // Adicionar event listener para o botão de filtro do histórico
