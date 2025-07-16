@@ -200,8 +200,12 @@ async function loadDashboard() {
       .in('id', idsConsumidos);
     itensConsumidos.forEach(i => { nomesItens[i.id] = i.nome; });
   }
-  const labelsBar = Object.keys(dadosBar).map(id => nomesItens[id] || id);
-  const dataBar = Object.values(dadosBar);
+  // Ordena e pega os 5 mais consumidos
+  const top5 = Object.entries(dadosBar)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  const labelsBar = top5.map(([id]) => nomesItens[id] || id);
+  const dataBar = top5.map(([_, qtd]) => qtd);
 
   // Gráfico de pizza: status do estoque
   const normal = itens.filter(item => item.quantidade > item.quantidade_minima).length;
@@ -209,9 +213,21 @@ async function loadDashboard() {
   const labelsPie = ['Normal', 'Baixo', 'Crítico'];
   const colorsPie = ['#2563eb', '#60a5fa', '#1e3a8a']; // Tons de azul
 
+  // Gráfico de consumo por dia da semana
+  // Inicializa array para cada dia da semana (0=Domingo, 6=Sábado)
+  const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const consumoPorDia = [0, 0, 0, 0, 0, 0, 0];
+  if (!histError && historico) {
+    historico.forEach(h => {
+      const data = new Date(h.data);
+      const dia = data.getDay();
+      consumoPorDia[dia] += h.quantidade;
+    });
+  }
+
   // Renderizar gráficos
   renderBarChart(labelsBar, dataBar);
-  renderPieChart(labelsPie, dataPie, colorsPie);
+  renderConsumoSemanaChart(diasSemana, consumoPorDia);
 }
 
 // Função para renderizar gráfico de barras
@@ -267,6 +283,41 @@ function renderPieChart(labels, data, colors) {
         }
       }
     },
+  });
+}
+
+// ...adicione após renderBarChart ou onde preferir...
+function renderConsumoSemanaChart(labels, data) {
+  const ctx = document.getElementById('chart-consumo-semana').getContext('2d');
+  if (window.consumoSemanaChart) window.consumoSemanaChart.destroy();
+  window.consumoSemanaChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Consumo por Dia da Semana',
+        data,
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34,197,94,0.2)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 5,
+        pointBackgroundColor: '#22c55e'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `Total consumido: ${ctx.parsed.y}`
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
   });
 }
 
@@ -1355,7 +1406,7 @@ if (btnExportarExcelHistorico) {
       if (mes) {
         const data = new Date(h.data);
         const mesFiltro = mes.split('-');
-        ok = ok && (data.getFullYear() === parseInt(mesFiltro[0]) && (data.getMonth() + 1) === parseInt(mesFiltro[1]));
+        ok = ok && (data.getFullYear() === parseInt(mesFiltro[0]) && (data.getMonth() +  1) === parseInt(mesFiltro[1]));
       }
       if (inicio) {
         const dataInicio = new Date(inicio + 'T00:00:00');
