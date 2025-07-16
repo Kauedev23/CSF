@@ -297,12 +297,12 @@ function renderConsumoSemanaChart(labels, data) {
       datasets: [{
         label: 'Consumo por Dia da Semana',
         data,
-        borderColor: '#22c55e',
-        backgroundColor: 'rgba(34,197,94,0.2)',
+        borderColor: '#4169E1',
+        backgroundColor: 'rgba(12, 189, 233, 0.2)',
         fill: true,
         tension: 0.3,
         pointRadius: 5,
-        pointBackgroundColor: '#22c55e'
+        pointBackgroundColor: '#4169E1'
       }]
     },
     options: {
