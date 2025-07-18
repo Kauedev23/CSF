@@ -318,7 +318,7 @@ thead th {
   background: #60a5fa !important; /* Azul claro */
 }
 .bg-green-100 {
-  background: #ff9800 !important; /* Laranja vibrante */
+  background: #374151 !important; /* Laranja vibrante */
 }
 
 .text-blue-800 {
@@ -515,7 +515,7 @@ thead th {
   animation: pulse-badge 1.2s infinite;
 }
 .dashboard-badge.critico { background: #e11d48; }
-.dashboard-badge.baixo { background: #f59e42; color: #222; }
+.dashboard-badge.baixo { background: #e0e0e0; color: #222; }
 @keyframes pulse-badge {
   0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 #e11d4822; }
   50% { transform: scale(1.12); box-shadow: 0 0 8px 4px #e11d4844; }
@@ -1044,4 +1044,23 @@ canvas, .bg-white > canvas, .bg-white > div > canvas {
 #relatorio-tabela .text-green-700,
 #relatorio-tabela .font-bold {
   color: #256c36 !important; /* verde escuro visível no claro */
+}
+
+/* Forçar visibilidade do filtro de categoria do dashboard */
+#filtro-categoria-dashboard {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important;
+  z-index: 1000 !important;
+  background: #fff;
+}
+
+/* Filtro de categoria sticky no dashboard */
+#filtro-categoria-dashboard {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  z-index: auto !important;
+  box-shadow: none !important;
 }

@@ -12,6 +12,7 @@ const loginContainer = document.getElementById('login-container');
 const mainContainer = document.getElementById('main-container');
 const userRoleSpan = document.getElementById('user-role');
 const navBar = document.querySelector('nav');
+const filtroCategoriaDashboard = document.getElementById('filtro-categoria-dashboard');
 
 function showLogin() {
   loginContainer.classList.remove('hidden');
@@ -84,6 +85,12 @@ async function checkSession() {
 // ===============================
 window.addEventListener('DOMContentLoaded', () => {
   checkSession();
+  // Usar apenas a variável global filtroCategoriaDashboard
+  if (filtroCategoriaDashboard) {
+    filtroCategoriaDashboard.addEventListener('change', () => {
+      loadDashboard();
+    });
+  }
 });
 
 // ===============================
@@ -150,16 +157,26 @@ async function loadDashboard() {
     showToast('Erro ao carregar itens: ' + error.message, 'error');
     return;
   }
+  // Popular filtro de categoria
+  if (filtroCategoriaDashboard) {
+    const categorias = [...new Set(itens.map(i => i.categoria).filter(Boolean))];
+    const categoriaAtual = filtroCategoriaDashboard.value;
+    filtroCategoriaDashboard.innerHTML = '<option value="">Todas as categorias</option>' +
+      categorias.map(cat => `<option value="${cat}" ${cat === categoriaAtual ? 'selected' : ''}>${cat}</option>`).join('');
+  }
+  // Filtrar itens pela categoria selecionada
+  let itensFiltrados = itens;
+  if (filtroCategoriaDashboard && filtroCategoriaDashboard.value) {
+    itensFiltrados = itens.filter(i => i.categoria === filtroCategoriaDashboard.value);
+  }
   // Estatísticas
-  const totalItens = itens.length;
-  const baixo = itens.filter(item => item.quantidade > 0 && item.quantidade <= item.quantidade_minima).length;
-  const critico = itens.filter(item => item.quantidade === 0).length;
-
+  const totalItens = itensFiltrados.length;
+  const baixo = itensFiltrados.filter(item => item.quantidade > 0 && item.quantidade <= item.quantidade_minima).length;
+  const critico = itensFiltrados.filter(item => item.quantidade === 0).length;
   // Alerta visual de estoque baixo
-  if (itens.some(item => item.quantidade <= item.quantidade_minima)) {
+  if (itensFiltrados.some(item => item.quantidade <= item.quantidade_minima)) {
     showToast('Atenção: Existem itens abaixo do estoque mínimo!', 'error');
   }
-
   // Consumo mensal (somar saídas do mês atual)
   const inicioMes = new Date();
   inicioMes.setDate(1);
@@ -171,34 +188,30 @@ async function loadDashboard() {
     .gte('data', inicioMes.toISOString());
   let consumoMensal = 0;
   if (!histError && historico) {
-    consumoMensal = historico.reduce((soma, h) => soma + h.quantidade, 0);
+    // Só considerar histórico de itens filtrados
+    const idsFiltrados = new Set(itensFiltrados.map(i => i.id));
+    consumoMensal = historico.filter(h => idsFiltrados.has(h.item_id)).reduce((soma, h) => soma + h.quantidade, 0);
   }
-
-  // Restaurar cards reais antes de animar, passando os valores de critico e baixo
   renderDashboardCards(critico, baixo);
-  // Atualizar cards com animação
   animateCounter(document.getElementById('stat-total-itens'), totalItens);
   animateCounter(document.getElementById('stat-baixo'), baixo);
   animateCounter(document.getElementById('stat-critico'), critico);
   animateCounter(document.getElementById('stat-consumo-mensal'), consumoMensal);
-
-  // Gráfico de barras: itens mais consumidos
+  // Gráfico de barras: itens mais consumidos (apenas da categoria filtrada)
   let dadosBar = {};
   if (!histError && historico) {
+    const idsFiltrados = new Set(itensFiltrados.map(i => i.id));
     historico.forEach(h => {
-      if (!dadosBar[h.item_id]) dadosBar[h.item_id] = 0;
-      dadosBar[h.item_id] += h.quantidade;
+      if (idsFiltrados.has(h.item_id)) {
+        if (!dadosBar[h.item_id]) dadosBar[h.item_id] = 0;
+        dadosBar[h.item_id] += h.quantidade;
+      }
     });
   }
-  // Buscar nomes dos itens consumidos
   const idsConsumidos = Object.keys(dadosBar);
   let nomesItens = {};
   if (idsConsumidos.length > 0) {
-    const { data: itensConsumidos } = await supabase
-      .from('itens')
-      .select('id, nome')
-      .in('id', idsConsumidos);
-    itensConsumidos.forEach(i => { nomesItens[i.id] = i.nome; });
+    itensFiltrados.forEach(i => { if (idsConsumidos.includes(i.id.toString())) nomesItens[i.id] = i.nome; });
   }
   // Ordena e pega os 5 mais consumidos
   const top5 = Object.entries(dadosBar)
@@ -206,26 +219,24 @@ async function loadDashboard() {
     .slice(0, 5);
   const labelsBar = top5.map(([id]) => nomesItens[id] || id);
   const dataBar = top5.map(([_, qtd]) => qtd);
-
   // Gráfico de pizza: status do estoque
-  const normal = itens.filter(item => item.quantidade > item.quantidade_minima).length;
+  const normal = itensFiltrados.filter(item => item.quantidade > item.quantidade_minima).length;
   const dataPie = [normal, baixo, critico];
   const labelsPie = ['Normal', 'Baixo', 'Crítico'];
-  const colorsPie = ['#2563eb', '#60a5fa', '#1e3a8a']; // Tons de azul
-
-  // Gráfico de consumo por dia da semana
-  // Inicializa array para cada dia da semana (0=Domingo, 6=Sábado)
+  const colorsPie = ['#2563eb', '#60a5fa', '#1e3a8a'];
+  // Gráfico de consumo por dia da semana (apenas itens filtrados)
   const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const consumoPorDia = [0, 0, 0, 0, 0, 0, 0];
   if (!histError && historico) {
+    const idsFiltrados = new Set(itensFiltrados.map(i => i.id));
     historico.forEach(h => {
-      const data = new Date(h.data);
-      const dia = data.getDay();
-      consumoPorDia[dia] += h.quantidade;
+      if (idsFiltrados.has(h.item_id)) {
+        const data = new Date(h.data);
+        const dia = data.getDay();
+        consumoPorDia[dia] += h.quantidade;
+      }
     });
   }
-
-  // Renderizar gráficos
   renderBarChart(labelsBar, dataBar);
   renderConsumoSemanaChart(diasSemana, consumoPorDia);
 }
@@ -489,6 +500,7 @@ function abrirFormItem(item = null) {
     formItem['item-minima'].value = item.quantidade_minima;
     formItem['item-unidade'].value = item.unidade;
     formItem['item-fornecedor'].value = item.fornecedor;
+    formItem['item-categoria'].value = item.categoria || '';
     editandoItemId = item.id;
   } else {
     formItemTitle.textContent = 'Adicionar Item';
@@ -521,7 +533,8 @@ formItem.addEventListener('submit', async (e) => {
   const minima = parseInt(formItem['item-minima'].value, 10);
   const unidade = formItem['item-unidade'].value.trim();
   const fornecedor = formItem['item-fornecedor'].value.trim();
-  if (!nome || isNaN(quantidade) || isNaN(minima) || !unidade || !fornecedor) {
+  const categoria = formItem['item-categoria'].value.trim();
+  if (!nome || isNaN(quantidade) || isNaN(minima) || !unidade || !fornecedor || !categoria) {
     showToast('Preencha todos os campos corretamente.', 'error');
     return;
   }
@@ -568,7 +581,7 @@ formItem.addEventListener('submit', async (e) => {
     // Atualizar item
     const { error } = await supabase
       .from('itens')
-      .update({ nome, quantidade, quantidade_minima: minima, unidade, fornecedor })
+      .update({ nome, quantidade, quantidade_minima: minima, unidade, fornecedor, categoria })
       .eq('id', editandoItemId);
     if (error) {
       showToast('Erro ao atualizar item: ' + error.message, 'error');
@@ -582,6 +595,7 @@ formItem.addEventListener('submit', async (e) => {
       if (antigo.quantidade_minima !== minima) detalhes.push(`Mínima: ${antigo.quantidade_minima} → ${minima}`);
       if (antigo.unidade !== unidade) detalhes.push(`Unidade: '${antigo.unidade}' → '${unidade}'`);
       if (antigo.fornecedor !== fornecedor) detalhes.push(`Fornecedor: '${antigo.fornecedor}' → '${fornecedor}'`);
+      if (antigo.categoria !== categoria) detalhes.push(`Categoria: '${antigo.categoria || ''}' → '${categoria}'`);
     }
     if (detalhes.length > 0) {
       const user = await supabase.auth.getUser();
@@ -600,7 +614,7 @@ formItem.addEventListener('submit', async (e) => {
     // Adicionar item
     const { data, error } = await supabase
       .from('itens')
-      .insert([{ nome, quantidade, quantidade_minima: minima, unidade, fornecedor }])
+      .insert([{ nome, quantidade, quantidade_minima: minima, unidade, fornecedor, categoria }])
       .select();
     if (error) {
       showToast('Erro ao adicionar item: ' + error.message, 'error');
@@ -1053,6 +1067,9 @@ function showSection(sectionId) {
     sec.classList.remove('hidden');
     // Dispara evento customizado para carregar dados se necessário
     sec.dispatchEvent(new Event('show'));
+    if (sectionId === 'dashboard') {
+      loadDashboard();
+    }
   }
   // Atualiza menu ativo
   menuBtns.forEach(btn => {
@@ -1203,13 +1220,19 @@ function setDashboardPrefs(prefs) {
 function aplicarDashboardPrefs() {
   const prefs = getDashboardPrefs();
   // Cards
-  document.querySelector('[id^="stat-total-itens"]').closest('.bg-blue-100').style.display = prefs['card-total'] === false ? 'none' : '';
-  document.querySelector('[id^="stat-baixo"]').closest('.bg-yellow-100').style.display = prefs['card-baixo'] === false ? 'none' : '';
-  document.querySelector('[id^="stat-critico"]').closest('.bg-red-100').style.display = prefs['card-critico'] === false ? 'none' : '';
-  document.querySelector('[id^="stat-consumo-mensal"]').closest('.bg-green-100').style.display = prefs['card-consumo'] === false ? 'none' : '';
+  const statTotal = document.querySelector('[id^="stat-total-itens"]');
+  if (statTotal && statTotal.closest('.bg-blue-100')) statTotal.closest('.bg-blue-100').style.display = prefs['card-total'] === false ? 'none' : '';
+  const statBaixo = document.querySelector('[id^="stat-baixo"]');
+  if (statBaixo && statBaixo.closest('.bg-yellow-100')) statBaixo.closest('.bg-yellow-100').style.display = prefs['card-baixo'] === false ? 'none' : '';
+  const statCritico = document.querySelector('[id^="stat-critico"]');
+  if (statCritico && statCritico.closest('.bg-red-100')) statCritico.closest('.bg-red-100').style.display = prefs['card-critico'] === false ? 'none' : '';
+  const statConsumo = document.querySelector('[id^="stat-consumo-mensal"]');
+  if (statConsumo && statConsumo.closest('.bg-green-100')) statConsumo.closest('.bg-green-100').style.display = prefs['card-consumo'] === false ? 'none' : '';
   // Gráficos
-  document.getElementById('chart-bar').parentElement.style.display = prefs['graf-bar'] === false ? 'none' : '';
-  document.getElementById('chart-pie').parentElement.style.display = prefs['graf-pie'] === false ? 'none' : '';
+  const chartBar = document.getElementById('chart-bar');
+  if (chartBar && chartBar.parentElement) chartBar.parentElement.style.display = prefs['graf-bar'] === false ? 'none' : '';
+  const chartPie = document.getElementById('chart-pie');
+  if (chartPie && chartPie.parentElement) chartPie.parentElement.style.display = prefs['graf-pie'] === false ? 'none' : '';
 }
 if (customizarBtn && modalCustomizar && fecharModalCustomizar && formCustomizar) {
   customizarBtn.addEventListener('click', () => {

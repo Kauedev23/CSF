@@ -154,7 +154,13 @@
     <div id="main-container" class="hidden">
       <section id="dashboard" class="mb-10">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold text-blue-900 flex items-center gap-2"><svg class="w-6 h-6"><use href="#heroicon-o-home" /></svg>Dashboard</h2>
+          <h2 class="text-2xl font-bold text-blue-900 flex items-center gap-2">
+            <svg class="w-6 h-6"><use href="#heroicon-o-home" /></svg>Dashboard
+          </h2>
+          <select id="filtro-categoria-dashboard" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+            <option value="">Todas as categorias</option>
+            <!-- As opções serão preenchidas dinamicamente pelo JS -->
+          </select>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <!-- Card: Total de Itens -->
@@ -235,6 +241,10 @@
           <div>
             <label for="item-fornecedor" class="block mb-1 font-semibold">Fornecedor</label>
             <input type="text" id="item-fornecedor" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
+          </div>
+          <div>
+            <label for="item-categoria" class="block mb-1 font-semibold">Categoria</label>
+            <input type="text" id="item-categoria" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
           </div>
           <div class="flex justify-end gap-2">
             <button type="button" id="cancelar-item-btn" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold">Cancelar</button>
