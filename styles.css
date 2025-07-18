@@ -1032,9 +1032,6 @@ canvas, .bg-white > canvas, .bg-white > div > canvas {
     flex: 0 1 320px;
   }
 }
-.dashboard-cards-row {
-  display: none !important;
-}
 
 .dark #relatorio-tabela .text-green-700,
 .dark #relatorio-tabela .font-bold {
