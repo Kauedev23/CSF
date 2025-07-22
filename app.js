@@ -717,6 +717,11 @@ async function abrirFormConsumir() {
     wrapper.appendChild(consumirAutocompleteList);
 
     consumirInputGroup.appendChild(wrapper);
+
+    // Corrigir: sempre remover consumirItemSelect do DOM antes de adicionar
+    if (consumirItemSelect.parentNode) {
+      consumirItemSelect.parentNode.removeChild(consumirItemSelect);
+    }
     consumirInputGroup.appendChild(consumirItemSelect);
 
     // Insere o grupo antes do campo de quantidade
@@ -725,6 +730,17 @@ async function abrirFormConsumir() {
     consumirPesquisaInput.addEventListener('input', filtrarItensConsumir);
     consumirPesquisaInput.addEventListener('focus', filtrarItensConsumir);
     consumirPesquisaInput.addEventListener('blur', () => setTimeout(() => consumirAutocompleteList.style.display = 'none', 150));
+  } else {
+    // Corrigir: garantir que consumirInputGroup está no lugar certo e contém o select
+    if (consumirItemSelect.parentNode !== consumirInputGroup) {
+      if (consumirItemSelect.parentNode) {
+        consumirItemSelect.parentNode.removeChild(consumirItemSelect);
+      }
+      consumirInputGroup.appendChild(consumirItemSelect);
+    }
+    if (consumirInputGroup.parentNode !== formConsumir) {
+      formConsumir.insertBefore(consumirInputGroup, consumirQuantidadeInput.parentNode);
+    }
   }
   consumirPesquisaInput.value = '';
   consumirItemSelect.innerHTML = '<option value="">Selecione um item</option>';
