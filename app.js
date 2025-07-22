@@ -1575,3 +1575,30 @@ if (btnExportarExcelHistorico) {
     XLSX.writeFile(wb, 'historico_estoque.xlsx');
   });
 }
+
+// ===============================
+// Atualização automática do PWA ao detectar nova versão do Service Worker
+// ===============================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistration().then(function(reg) {
+    if (!reg) return;
+    reg.addEventListener('updatefound', function() {
+      const newWorker = reg.installing;
+      if (newWorker) {
+        newWorker.addEventListener('statechange', function() {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // Nova versão disponível, força reload
+            window.location.reload();
+          }
+        });
+      }
+    });
+  });
+
+  // Opcional: força busca por atualização ao focar a aba
+  window.addEventListener('focus', function() {
+    navigator.serviceWorker.getRegistration().then(function(reg) {
+      if (reg) reg.update();
+    });
+  });
+}
