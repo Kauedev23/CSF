@@ -673,7 +673,7 @@ window.excluirItem = async function(id) {
 };
 
 // ===============================
-// Consumir Item - Abrir formulário (agora com select de itens)
+// Consumir Item - Abrir formulário (input de pesquisa e select juntos, com autocomplete)
 // ===============================
 const formConsumirSection = document.getElementById('form-consumir-section');
 const formConsumir = document.getElementById('form-consumir');
@@ -681,32 +681,121 @@ const cancelarConsumirBtn = document.getElementById('cancelar-consumir-btn');
 const consumirItemSelect = document.getElementById('consumir-item-select');
 const consumirQuantidadeInput = document.getElementById('consumir-quantidade');
 
-// Popular select de itens ao abrir o formulário
+// Novo: autocomplete de itens para consumir
+let consumirItensOriginais = [];
+let consumirPesquisaInput = null;
+let consumirInputGroup = null;
+let consumirAutocompleteList = null;
+
 async function abrirFormConsumir() {
-  consumirItemSelect.innerHTML = '<option value="">Carregando...</option>';
+  // Cria container agrupando input e select se ainda não existe
+  if (!consumirInputGroup) {
+    consumirInputGroup = document.createElement('div');
+    consumirInputGroup.style.display = 'flex';
+    consumirInputGroup.style.flexDirection = 'column';
+    consumirInputGroup.style.marginBottom = '12px';
+
+    // Input de pesquisa
+    consumirPesquisaInput = document.createElement('input');
+    consumirPesquisaInput.type = 'text';
+    consumirPesquisaInput.placeholder = 'Pesquisar item...';
+    consumirPesquisaInput.className = 'px-3 py-2 border rounded w-full mb-1';
+    consumirPesquisaInput.id = 'consumir-pesquisa-input';
+    consumirPesquisaInput.autocomplete = 'off';
+
+    // Lista de sugestões
+    consumirAutocompleteList = document.createElement('div');
+    consumirAutocompleteList.className = 'autocomplete-list bg-white border rounded shadow absolute z-50';
+    consumirAutocompleteList.style.display = 'none';
+    consumirAutocompleteList.style.maxHeight = '180px';
+    consumirAutocompleteList.style.overflowY = 'auto';
+
+    // Wrapper para posicionar autocomplete corretamente
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.appendChild(consumirPesquisaInput);
+    wrapper.appendChild(consumirAutocompleteList);
+
+    consumirInputGroup.appendChild(wrapper);
+    consumirInputGroup.appendChild(consumirItemSelect);
+
+    // Insere o grupo antes do campo de quantidade
+    formConsumir.insertBefore(consumirInputGroup, consumirQuantidadeInput.parentNode);
+
+    consumirPesquisaInput.addEventListener('input', filtrarItensConsumir);
+    consumirPesquisaInput.addEventListener('focus', filtrarItensConsumir);
+    consumirPesquisaInput.addEventListener('blur', () => setTimeout(() => consumirAutocompleteList.style.display = 'none', 150));
+  }
+  consumirPesquisaInput.value = '';
+  consumirItemSelect.innerHTML = '<option value="">Selecione um item</option>';
   consumirQuantidadeInput.value = '';
   consumirQuantidadeInput.max = '';
+  consumirAutocompleteList.innerHTML = '';
+  consumirAutocompleteList.style.display = 'none';
+
   // Buscar itens disponíveis
   const { data: itens, error } = await supabase.from('itens').select('*').order('nome');
   if (error) {
     showToast('Erro ao carregar itens: ' + error.message, 'error');
     return;
   }
-  if (!itens || itens.length === 0) {
-    consumirItemSelect.innerHTML = '<option value="">Nenhum item disponível</option>';
-    return;
-  }
-  consumirItemSelect.innerHTML = '<option value="">Selecione um item</option>' +
-    itens.map(item => `<option value="${item.id}" data-qtd="${item.quantidade}">${item.nome} (${item.quantidade} ${item.unidade})</option>`).join('');
+  consumirItensOriginais = itens || [];
+  renderSelectItensConsumir(consumirItensOriginais);
   formConsumirSection.classList.remove('hidden');
   document.getElementById('estoque').classList.add('hidden');
 }
 
-// Atualizar max do campo quantidade ao selecionar item
+function renderSelectItensConsumir(lista) {
+  if (!lista || lista.length === 0) {
+    consumirItemSelect.innerHTML = '<option value="">Nenhum item disponível</option>';
+    return;
+  }
+  consumirItemSelect.innerHTML = '<option value="">Selecione um item</option>' +
+    lista.map(item => `<option value="${item.id}" data-qtd="${item.quantidade}">${item.nome} (${item.quantidade} ${item.unidade})</option>`).join('');
+}
+
+function filtrarItensConsumir() {
+  const termo = consumirPesquisaInput.value.trim().toLowerCase();
+  let filtrados = consumirItensOriginais;
+  if (termo) {
+    filtrados = consumirItensOriginais.filter(item =>
+      item.nome.toLowerCase().includes(termo)
+    );
+  }
+  // Atualiza select para manter compatibilidade (opcional)
+  renderSelectItensConsumir(filtrados);
+
+  // Autocomplete visual
+  if (termo && filtrados.length > 0) {
+    consumirAutocompleteList.innerHTML = filtrados.map(item =>
+      `<div class="px-3 py-2 cursor-pointer hover:bg-blue-100" data-id="${item.id}" data-qtd="${item.quantidade}">${item.nome} (${item.quantidade} ${item.unidade})</div>`
+    ).join('');
+    consumirAutocompleteList.style.display = 'block';
+    // Clique na sugestão
+    consumirAutocompleteList.querySelectorAll('div').forEach(div => {
+      div.addEventListener('mousedown', () => {
+        consumirPesquisaInput.value = div.textContent;
+        consumirItemSelect.value = div.getAttribute('data-id');
+        consumirQuantidadeInput.max = div.getAttribute('data-qtd');
+        consumirAutocompleteList.style.display = 'none';
+      });
+    });
+  } else {
+    consumirAutocompleteList.innerHTML = '';
+    consumirAutocompleteList.style.display = 'none';
+  }
+}
+
+// Atualizar max do campo quantidade ao selecionar item manualmente
 consumirItemSelect.addEventListener('change', function() {
   const selected = consumirItemSelect.options[consumirItemSelect.selectedIndex];
   const qtd = selected.getAttribute('data-qtd');
   consumirQuantidadeInput.max = qtd || '';
+  // Atualiza input de pesquisa para refletir o nome selecionado
+  if (selected.value) {
+    const item = consumirItensOriginais.find(i => String(i.id) === selected.value);
+    if (item) consumirPesquisaInput.value = `${item.nome} (${item.quantidade} ${item.unidade})`;
+  }
 });
 
 if (cancelarConsumirBtn) {
